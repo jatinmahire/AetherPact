@@ -98,16 +98,18 @@ Open `http://127.0.0.1:3000` in your web browser.
 3. Copy your deployed service URL (e.g., `https://aetherpact-backend.onrender.com`).
 4. *Important*: Render's free tier spins down on inactivity. Before demos or judging, open `https://<your-service>.onrender.com/health` in a browser tab a few minutes prior to wake it up.
 
-### B. Deploy Frontend to Netlify
-1. Open `frontend/script.js`.
-2. Replace line 1:
-   ```javascript
-   const API_BASE = "https://aetherpact-backend.onrender.com"; // Your live Render URL
-   ```
-3. In [Netlify Dashboard](https://app.netlify.com/):
-   - Drag and drop the `frontend` folder directly into Netlify's **Deploy manually** area.
-   - Alternatively, connect your repository with an empty build command and publish directory set to `frontend`.
-4. Your site will instantly go live with an `*.netlify.app` URL.
+### B. Deploy Frontend to Vercel (Recommended & Instant)
+1. Go to [Vercel Dashboard](https://vercel.com/new).
+2. Import your GitHub repository: `jatinmahire/AetherPact`.
+3. Vercel will automatically detect `vercel.json` and configure `frontend` as the output directory.
+4. Click **Deploy**. Your site is live instantly with an `*.vercel.app` URL!
+
+### C. Deploy Frontend to Netlify
+1. Go to [Netlify Dashboard](https://app.netlify.com/).
+2. Drag and drop the `frontend` folder directly into Netlify's **Deploy manually** zone (fastest, zero git setup required).
+3. Or click **Add new site** &rarr; **Import an existing project** &rarr; Connect `jatinmahire/AetherPact`.
+   - Netlify will automatically detect `netlify.toml` and set the publish directory to `frontend`.
+4. Click **Deploy site**. Your site will be live on an `*.netlify.app` URL.
 
 ---
 
