@@ -144,20 +144,20 @@ async function apiFetch(endpoint, options = {}) {
 // Health Check
 async function checkBackendHealth() {
   const root = getApiRoot();
-  apiUrlDisplay.textContent = root.replace(/^https?:\/\//, "");
+  if (apiUrlDisplay) apiUrlDisplay.textContent = root.replace(/^https?:\/\//, "");
 
   try {
     const data = await apiFetch("/health");
     if (data && data.status === "ok") {
-      apiStatusDot.className = "status-dot online";
-      apiStatusText.textContent = "Online & Ready";
+      if (apiStatusDot) apiStatusDot.className = "status-dot online";
+      if (apiStatusText) apiStatusText.textContent = "Online & Ready";
       return true;
     } else {
       throw new Error("Invalid status");
     }
   } catch (err) {
-    apiStatusDot.className = "status-dot offline";
-    apiStatusText.textContent = "Backend Offline";
+    if (apiStatusDot) apiStatusDot.className = "status-dot offline";
+    if (apiStatusText) apiStatusText.textContent = "Backend Offline";
     return false;
   }
 }
