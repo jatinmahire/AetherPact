@@ -69,26 +69,106 @@
        VIEW 1: LANDING PAGE (Default for Visitors with No Session)
        ==================================================================== -->
   <section id="view-landing" class="view-section">
-    <!-- Hero Section -->
+    <!-- Hero Section with Animated Multi-Color Ambient Aurora Glow -->
     <div class="landing-hero">
+      <!-- Animated multi-color floating orbs (Indigo, Violet, Cyan, Rose) -->
+      <div class="aurora-bg-mesh" aria-hidden="true">
+        <div class="aurora-orb aurora-orb-1"></div>
+        <div class="aurora-orb aurora-orb-2"></div>
+        <div class="aurora-orb aurora-orb-3"></div>
+        <div class="aurora-orb aurora-orb-4"></div>
+        <div class="aurora-grid-overlay"></div>
+      </div>
+
       <div class="landing-hero-container">
-        <div class="landing-hero-badge">B2B Hospitality Exchange & Sourcing</div>
-        <h1 class="landing-hero-title">Share, Discover, and Settle Hospitality Assets with Real Intelligence</h1>
-        <p class="landing-hero-desc">
-          AetherPact connects premier hotels, cloud kitchens, and event organizers across Mumbai. 
-          Instantly match excess venue availability and production equipment using live TF-IDF semantic matching, 
-          Google Maps integration, and automated bilateral clearing contracts.
+        <div class="landing-hero-badge">
+          <span class="badge-dot-live"></span>
+          <span class="badge-text-glow">Autonomous Hospitality Sourcing &amp; Bilateral Clearing</span>
+          <span class="badge-sparkle">✨</span>
+        </div>
+
+        <h1 class="landing-hero-title">
+          Share, Discover, and Settle Hospitality Assets with 
+          <span class="gradient-text-animated">Real Intelligence</span>
+        </h1>
+
+        <p class="landing-hero-honest-note">
+          Matches are ranked using real-time AI text similarity, not fixed filters.
         </p>
 
+        <p class="landing-hero-desc">
+          AetherPact connects premier luxury hotels, commercial cloud kitchens, and event planners across Mumbai. 
+          Instantly match excess venue availability and equipment using live TF-IDF semantic vectors, 
+          Google Maps geospatial intelligence, and deterministic bilateral clearing contracts.
+        </p>
+
+        <!-- Floating Stat & Intelligence Badges -->
+        <div class="hero-feature-chips">
+          <div class="feature-chip">
+            <span class="chip-icon">⚡</span>
+            <span class="chip-label"><strong>&lt;10ms</strong> Live TF-IDF Vectors</span>
+          </div>
+          <div class="feature-chip">
+            <span class="chip-icon">📍</span>
+            <span class="chip-label"><strong>Google Maps</strong> Geo-Proximity</span>
+          </div>
+          <div class="feature-chip">
+            <span class="chip-icon">⚖️</span>
+            <span class="chip-label"><strong>Zero-Bias</strong> ZOPA Settlement</span>
+          </div>
+          <div class="feature-chip">
+            <span class="chip-icon">💡</span>
+            <span class="chip-label"><strong>Explainable</strong> AI Reasoning</span>
+          </div>
+        </div>
+
         <div class="landing-hero-actions">
-          <button type="button" class="btn btn-primary btn-hero" id="btn-landing-browse">
+          <button type="button" class="btn btn-primary btn-hero btn-hero-glow" id="btn-landing-browse">
             <span class="btn-icon">🔍</span>
-            <span>Browse Available Resources</span>
+            <span>Browse &amp; Match Resources</span>
+            <span class="btn-arrow">&rarr;</span>
           </button>
-          <button type="button" class="btn btn-accent btn-hero" id="btn-landing-list">
+          <button type="button" class="btn btn-hero btn-hero-ai" id="btn-hero-chat-trigger">
+            <svg class="ai-sparkle-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+            </svg>
+            <span>Ask AI Assistant</span>
+          </button>
+          <button type="button" class="btn btn-hero btn-hero-glass" id="btn-landing-list">
             <span class="btn-icon">🏢</span>
             <span>List Your Resource</span>
           </button>
+        </div>
+
+        <!-- Quick Category Discovery Pills -->
+        <div class="hero-quick-categories">
+          <span class="quick-cat-label">Explore Mumbai Categories:</span>
+          <div class="quick-cat-pills">
+            <button type="button" class="quick-cat-pill" data-category="banquet_hall">🏰 Banquet Halls</button>
+            <button type="button" class="quick-cat-pill" data-category="kitchen">🍳 Cloud Kitchens</button>
+            <button type="button" class="quick-cat-pill" data-category="av_equipment">🔊 AV &amp; Staging</button>
+            <button type="button" class="quick-cat-pill" data-category="vehicle">🚐 Shuttle Fleets</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Metric & Trust Bar -->
+    <div class="landing-stats-bar">
+      <div class="stats-bar-container">
+        <div class="stat-cell">
+          <div class="stat-number">50% + 30% + 20%</div>
+          <div class="stat-desc">Multi-Factor Semantic, Budget &amp; Proximity Scoring</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <div class="stat-number">Deterministic</div>
+          <div class="stat-desc">Game-Theoretic ZOPA Financial Settlement Core</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <div class="stat-number">Zero Hallucination</div>
+          <div class="stat-desc">Pure Logic &amp; Arithmetic — No Random Simulated Numbers</div>
         </div>
       </div>
     </div>
@@ -97,82 +177,87 @@
     <div class="how-it-works-section">
       <div class="how-it-works-container">
         <div class="section-title-wrap">
+          <div class="section-pill-tag">Interactive Architecture</div>
           <h2 class="section-heading">How AetherPact Works</h2>
-          <p class="section-subheading">A transparent, dual-sided marketplace with zero faked algorithms</p>
+          <p class="section-subheading">A transparent, dual-sided marketplace powered by verifiable mathematical intelligence</p>
         </div>
 
         <div class="roles-how-grid">
           <!-- Provider Column -->
-          <div class="card role-how-card">
+          <div class="card role-how-card role-card-provider">
+            <div class="role-card-accent-bar accent-provider"></div>
             <div class="role-how-header">
-              <span class="role-how-icon">🏢</span>
+              <span class="role-how-icon icon-provider">🏢</span>
               <div>
-                <h3>For Resource Hosts & Providers</h3>
-                <p>Hotels, Cloud Kitchens, AV Hire & Vehicle Fleets</p>
+                <span class="role-badge badge-provider-role">For Asset Hosts</span>
+                <h3>Resource Hosts &amp; Providers</h3>
+                <p>Hotels, Cloud Kitchens, AV Hire &amp; Vehicle Fleets</p>
               </div>
             </div>
             <div class="steps-list">
               <div class="step-item">
-                <div class="step-number">1</div>
+                <div class="step-number step-num-provider">1</div>
                 <div class="step-content">
-                  <h4>Register Your Provider Account</h4>
-                  <p>Create your verified host profile to manage available venue slots and commercial inventory.</p>
+                  <h4>Register Your Provider Profile</h4>
+                  <p>Access your dedicated host portal to manage venue availability and industrial kitchen shifts.</p>
                 </div>
               </div>
               <div class="step-item">
-                <div class="step-number">2</div>
+                <div class="step-number step-num-provider">2</div>
                 <div class="step-content">
-                  <h4>List Assets with Google Maps Link</h4>
-                  <p>Paste your venue's Google Maps link or pick a Mumbai hub. Rates, capacity, and specifications are saved instantly.</p>
+                  <h4>List Assets with Google Maps URL</h4>
+                  <p>Paste your Google Maps link or select Mumbai hubs (BKC, Andheri, Marine Drive). Rates and capacities sync live.</p>
                 </div>
               </div>
               <div class="step-item">
-                <div class="step-number">3</div>
+                <div class="step-number step-num-provider">3</div>
                 <div class="step-content">
-                  <h4>Receive Automated Fair Settlements</h4>
-                  <p>Close rental deals at mathematically balanced clearing prices via our bilateral agreement engine.</p>
+                  <h4>Settle Frictionless Rental Contracts</h4>
+                  <p>Close bookings automatically at mathematically balanced clearing rates with clear concession insights.</p>
                 </div>
               </div>
             </div>
             <div class="role-how-footer">
-              <button type="button" class="btn btn-primary btn-sm" id="btn-role-host-cta">Host Venue or Gear &rarr;</button>
+              <button type="button" class="btn btn-primary btn-sm btn-glow" id="btn-role-host-cta">Host Venue or Gear &rarr;</button>
             </div>
           </div>
 
           <!-- Seeker Column -->
-          <div class="card role-how-card">
+          <div class="card role-how-card role-card-seeker">
+            <div class="role-card-accent-bar accent-seeker"></div>
             <div class="role-how-header">
-              <span class="role-how-icon">🔍</span>
+              <span class="role-how-icon icon-seeker">🔍</span>
               <div>
-                <h3>For Seekers & Event Planners</h3>
-                <p>Event Organizers, Caterers, Agencies & Corporates</p>
+                <span class="role-badge badge-seeker-role">For Event Planners</span>
+                <h3>Seekers &amp; Event Planners</h3>
+                <p>Event Organizers, Caterers, Agencies &amp; Corporates</p>
               </div>
             </div>
             <div class="steps-list">
               <div class="step-item">
-                <div class="step-number">1</div>
+                <div class="step-number step-num-seeker">1</div>
                 <div class="step-content">
-                  <h4>Free-Text Semantic Requirement</h4>
-                  <p>Describe your event or catering needs in plain English with your budget and preferred location.</p>
+                  <h4>Natural Language Requirement</h4>
+                  <p>Express specific event needs in plain text along with your budget and preferred location or GPS pin.</p>
                 </div>
               </div>
               <div class="step-item">
-                <div class="step-number">2</div>
+                <div class="step-number step-num-seeker">2</div>
                 <div class="step-content">
-                  <h4>Live TF-IDF & Haversine Rankings</h4>
-                  <p>Get instant ranked matches scored on semantic fit (50%), budget match (30%), and distance (20%).</p>
+                  <h4>Live TF-IDF &amp; Haversine Ranking</h4>
+                  <p>Receive ranked matches with confidence badges, score breakdowns, and transparent AI reasoning insights.</p>
                 </div>
               </div>
               <div class="step-item">
-                <div class="step-number">3</div>
+                <div class="step-number step-num-seeker">3</div>
                 <div class="step-content">
-                  <h4>Bilateral Settlement Negotiation</h4>
-                  <p>Lock in your preferred listing and let our deterministic solver calculate an equitable clearing price.</p>
+                  <h4>Bilateral ZOPA Negotiation</h4>
+                  <p>Compute fair clearing prices in milliseconds with automated proof of mutual economic surplus.</p>
                 </div>
               </div>
             </div>
             <div class="role-how-footer">
-              <button type="button" class="btn btn-accent btn-sm" id="btn-role-seeker-cta">Search Resources &rarr;</button>
+              <button type="button" class="btn btn-accent btn-sm btn-glow-accent" id="btn-role-seeker-cta">Search Resources &rarr;</button>
             </div>
           </div>
         </div>
@@ -355,7 +440,12 @@
           <div class="card form-card">
             <div class="card-header search-header-row">
               <div>
-                <h3>Search Available Resources</h3>
+                <h3 class="heading-with-ai-badge">
+                  <svg class="ai-sparkle-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+                  </svg>
+                  Find a Resource (AI-Powered Matching)
+                </h3>
                 <p class="subtitle">Enter your exact needs for real-time TF-IDF semantic matching</p>
               </div>
               <button type="button" id="btn-sample-search" class="btn btn-accent btn-sm">
@@ -464,7 +554,7 @@
 
             <div id="match-loading-state" class="loading-state hidden">
               <div class="spinner"></div>
-              <span>Evaluating semantic vectors, price fit, and distances...</span>
+              <span id="match-loading-step-text">Evaluating semantic vectors, price fit, and distances...</span>
             </div>
 
             <div id="match-initial-state" class="empty-state">
@@ -595,6 +685,10 @@
                 <span class="clearing-title">Balanced Clearing Rate</span>
                 <div class="clearing-number" id="settled-clearing-price">₹0.00</div>
                 <p class="clearing-subtitle">Equitably calculated at the exact midpoint of overlapping bounds</p>
+                <div id="settled-negotiation-insight-box" class="settled-negotiation-insight hidden">
+                  <span class="nego-insight-icon">⚖️</span>
+                  <span id="settled-negotiation-insight-text"></span>
+                </div>
               </div>
 
               <div class="settled-summary-box">
@@ -721,7 +815,70 @@
       </div>
       <p class="footer-note">All scores, rankings, distances, and settlement prices are computed live from user input. No hardcoded or randomized values.</p>
     </div>
-  </footer>
+  <!-- ====================================================================
+       AI SEARCH ASSISTANT (Landing Page Floating & Embedded Chat Widget)
+       ==================================================================== -->
+  <div id="ai-chat-widget" class="ai-chat-widget">
+    <!-- Floating Toggle Button -->
+    <button type="button" id="btn-chat-toggle" class="chat-toggle-btn" aria-label="Open AI Search Assistant" title="Chat with AI Search Assistant">
+      <span class="chat-toggle-badge">AI Assistant</span>
+      <div class="chat-toggle-icon-wrap">
+        <svg class="ai-sparkle-icon chat-icon-sparkle" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+        </svg>
+        <span class="chat-icon-close hidden">✕</span>
+      </div>
+    </button>
+
+    <!-- Chat Panel Window -->
+    <div id="ai-chat-panel" class="ai-chat-panel hidden">
+      <!-- Panel Header -->
+      <div class="chat-panel-header">
+        <div class="chat-header-info">
+          <div class="chat-header-avatar">
+            <svg class="ai-sparkle-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+            </svg>
+          </div>
+          <div>
+            <h4 class="chat-header-title">AetherPact AI Search Assistant</h4>
+            <span class="chat-header-status">Live TF-IDF Matching Engine</span>
+          </div>
+        </div>
+        <button type="button" id="btn-chat-close" class="btn-chat-close" aria-label="Close Assistant">✕</button>
+      </div>
+
+      <!-- Quick Suggestion Prompt Chips -->
+      <div class="chat-suggestion-bar">
+        <button type="button" class="chat-suggest-chip" data-prompt="banquet hall for 200 guests this weekend, budget 20000">Banquet Hall ₹20k</button>
+        <button type="button" class="chat-suggest-chip" data-prompt="commercial cloud kitchen with cold storage under 25000">Kitchen under ₹25k</button>
+        <button type="button" class="chat-suggest-chip" data-prompt="executive shuttle passenger vans rs 6000">Shuttle Vans ₹6k</button>
+      </div>
+
+      <!-- Message History Container -->
+      <div id="chat-messages" class="chat-messages-container">
+        <!-- Static Greeting Message (UI Copy) -->
+        <div class="chat-msg chat-msg-assistant">
+          <div class="chat-msg-avatar">
+            <svg class="ai-sparkle-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+            </svg>
+          </div>
+          <div class="chat-msg-body">
+            <p>Tell me what you're looking for, for example: a banquet hall for 200 guests this weekend, budget 20000.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input Form -->
+      <form id="chat-form" class="chat-input-form" novalidate>
+        <input type="text" id="chat-input" class="chat-input" placeholder="Describe requirement &amp; budget..." autocomplete="off" required>
+        <button type="submit" id="btn-chat-send" class="btn-chat-send" aria-label="Send query">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

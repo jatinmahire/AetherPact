@@ -19,15 +19,38 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# 1. CORS middleware explicitly allowing all origins and headers (including Authorization)
-# Note: For hackathon demo; restrict origins to authorized domains in production.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# 1. CORS middleware allowing cross-origin requests from Vercel deployments, localhost, and custom domains
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+if cors_origins_env:
+    origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    # Default permissive CORS for hackathon & multi-domain deployment (Vercel frontend + Render backend)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+@app.get("/")
+def root():
+    """Service status and quick links for Render deployments."""
+    return {
+        "service": "AetherPact API",
+        "status": "online",
+        "version": "2.0.0",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
 
 # ====================================================================
 # IN-MEMORY DATA STORES & SECURITY DISCLOSURE
@@ -340,11 +363,79 @@ def create_listing(listing_in: ListingCreate, request: Request):
     listings.append(new_listing)
     return new_listing
 
+# ====================================================================
+# AI INSIGHTS & EXPLANATION GENERATORS (DETERMINISTIC NUMERICAL REASONING)
+# ====================================================================
+
+def compute_confidence_label(final_score: float) -> str:
+    """Computes categorical confidence label based on deterministic final_score thresholds."""
+    if final_score >= 0.75:
+        return "Strong Match"
+    elif final_score >= 0.5:
+        return "Good Match"
+    elif final_score >= 0.3:
+        return "Partial Match"
+    else:
+        return "Weak Match"
+
+def generate_match_insight(breakdown: Dict[str, Any], final_score: float) -> str:
+    """
+    Generates deterministic explanation string based on computed breakdown scores:
+    semantic, price_fit, and distance. Pure logic on real numbers (no LLM, no randomness).
+    """
+    components = {
+        "semantic": float(breakdown.get("semantic", 0.0)),
+        "price_fit": float(breakdown.get("price_fit", 0.0)),
+        "distance": float(breakdown.get("distance", 0.0))
+    }
+
+    highest_comp = max(components, key=components.get)
+    lowest_comp = min(components, key=components.get)
+
+    highest_templates = {
+        "semantic": "This listing's description closely matches what you described.",
+        "price_fit": "This listing's price is very close to your stated budget.",
+        "distance": "This is one of the closest available options to your location."
+    }
+
+    lowest_templates = {
+        "semantic": "The description overlap with your request is weaker than other matches.",
+        "price_fit": "This option is further from your stated budget than others.",
+        "distance": "This option is farther from your location than others."
+    }
+
+    sentences = [highest_templates[highest_comp]]
+
+    # Only append the lowest sentence if its score is below 0.5 and it is not the exact same component
+    if components[lowest_comp] < 0.5 and lowest_comp != highest_comp:
+        sentences.append(lowest_templates[lowest_comp])
+
+    return " ".join(sentences)
+
+def generate_negotiation_insight(provider_ask: float, seeker_offer: float, clearing_price: float) -> str:
+    """
+    Computes real movements from initial positions and generates an objective explanation
+    of which party conceded more. Pure arithmetic on real numbers.
+    """
+    provider_movement = round(abs(provider_ask - clearing_price), 2)
+    seeker_movement = round(abs(seeker_offer - clearing_price), 2)
+
+    def _fmt(val: float) -> str:
+        return f"₹{int(val):,}" if val.is_integer() else f"₹{val:,.2f}"
+
+    if provider_movement > seeker_movement:
+        return f"The provider moved further from their initial ask ({_fmt(provider_movement)}) than the seeker did from their initial offer ({_fmt(seeker_movement)})."
+    elif seeker_movement > provider_movement:
+        return f"The seeker moved further from their initial offer ({_fmt(seeker_movement)}) than the provider did from their initial ask ({_fmt(provider_movement)})."
+    else:
+        return f"Both parties conceded equally, each moving {_fmt(seeker_movement)} from their opening positions."
+
 # 5. POST /match (Public)
 @app.post("/match")
 def match_listings(req: MatchRequest):
     """
     Computes live TF-IDF semantic cosine similarity, price fit, and Haversine distance (Public).
+    Augments each match with deterministic AI insight reasoning and confidence label.
     """
     if not listings:
         return {"matches": []}
@@ -396,18 +487,26 @@ def match_listings(req: MatchRequest):
         final_score = raw_final_score * filter_multiplier
         maps_link = listing.get("google_maps_url") or f"https://www.google.com/maps?q={listing['lat']},{listing['lng']}"
 
+        breakdown_data = {
+            "semantic": round(semantic_score, 3),
+            "price_fit": round(price_score, 3),
+            "distance": round(distance_score, 3),
+            "distance_km": round(distance_km, 3)
+        }
+        rounded_final_score = round(final_score, 3)
+
+        insight_text = generate_match_insight(breakdown_data, rounded_final_score)
+        confidence_lbl = compute_confidence_label(rounded_final_score)
+
         scored_matches.append({
             "listing": {
                 **listing,
                 "google_maps_url": maps_link
             },
-            "final_score": round(final_score, 3),
-            "breakdown": {
-                "semantic": round(semantic_score, 3),
-                "price_fit": round(price_score, 3),
-                "distance": round(distance_score, 3),
-                "distance_km": round(distance_km, 3)
-            }
+            "final_score": rounded_final_score,
+            "confidence_label": confidence_lbl,
+            "insight": insight_text,
+            "breakdown": breakdown_data
         })
 
     scored_matches.sort(key=lambda x: x["final_score"], reverse=True)
@@ -421,6 +520,7 @@ def negotiate(req: NegotiateRequest, request: Request):
     """
     Deterministic Zone-of-Possible-Agreement (ZOPA) clearing engine.
     Requires a valid token (seeker or provider).
+    Includes deterministic negotiation_insight explaining party concessions.
     """
     user = get_current_user(request)
     if not user:
@@ -443,8 +543,15 @@ def negotiate(req: NegotiateRequest, request: Request):
     if req.extra_terms and req.extra_terms.strip():
         summary += f" Terms: {req.extra_terms.strip()}."
 
+    negotiation_insight = generate_negotiation_insight(
+        provider_ask=req.provider_ask,
+        seeker_offer=req.seeker_offer,
+        clearing_price=clearing_price
+    )
+
     return {
         "status": "settled",
         "clearing_price": clearing_price,
-        "summary": summary
+        "summary": summary,
+        "negotiation_insight": negotiation_insight
     }

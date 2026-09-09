@@ -1,15 +1,59 @@
 const API_BASE = "PASTE_YOUR_RENDER_BACKEND_URL_HERE";
 
 /**
- * Resolves active backend API root.
- * Falls back to http://127.0.0.1:8000 for local development.
+ * Resolves active backend API root dynamically.
+ * Priority:
+ * 1. window.AETHER_API_URL override
+ * 2. URL parameter: ?api=https://... (automatically stored in localStorage)
+ * 3. Persistent localStorage: 'aether_api_url'
+ * 4. API_BASE constant (if configured)
+ * 5. Fallback: http://127.0.0.1:8000 for local development
  */
 function getApiRoot() {
-  if (API_BASE && API_BASE !== "PASTE_YOUR_RENDER_BACKEND_URL_HERE" && API_BASE.trim() !== "") {
-    return API_BASE.replace(/\/+$/, "");
+  if (window.AETHER_API_URL && window.AETHER_API_URL.trim() !== "") {
+    return window.AETHER_API_URL.trim().replace(/\/+$/, "");
   }
+
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryApi = urlParams.get("api");
+    if (queryApi && queryApi.trim() !== "") {
+      const clean = queryApi.trim().replace(/\/+$/, "");
+      localStorage.setItem("aether_api_url", clean);
+      return clean;
+    }
+  } catch (_) {}
+
+  try {
+    const stored = localStorage.getItem("aether_api_url");
+    if (stored && stored.trim() !== "") {
+      return stored.trim().replace(/\/+$/, "");
+    }
+  } catch (_) {}
+
+  if (API_BASE && API_BASE !== "PASTE_YOUR_RENDER_BACKEND_URL_HERE" && API_BASE.trim() !== "") {
+    return API_BASE.trim().replace(/\/+$/, "");
+  }
+
   return "http://127.0.0.1:8000";
 }
+
+// Global helper to set Render backend URL at runtime from console or UI
+window.setBackendUrl = function(url) {
+  if (!url || typeof url !== "string") {
+    console.error("Please provide a valid backend URL, e.g. setBackendUrl('https://your-app.onrender.com')");
+    return;
+  }
+  const clean = url.trim().replace(/\/+$/, "");
+  localStorage.setItem("aether_api_url", clean);
+  console.log(`✅ Backend URL updated to: ${clean}`);
+  alert(`Backend URL updated to: ${clean}\nReloading page to connect...`);
+  window.location.reload();
+};
+
+
+// Global Reusable AI Sparkle Icon SVG
+const AI_SPARKLE_SVG = `<svg class="ai-sparkle-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/></svg>`;
 
 // Global Auth State
 let currentToken = localStorage.getItem("aether_token") || null;
@@ -160,6 +204,19 @@ btnRoleHostCta.addEventListener("click", () => {
       defaultTab: "register"
     });
   }
+});
+
+// Quick Category Pills on Landing Hero
+document.querySelectorAll(".quick-cat-pill").forEach(pill => {
+  pill.addEventListener("click", () => {
+    const cat = pill.dataset.category;
+    showView("seeker");
+    const matchTypeSelect = document.getElementById("match-type");
+    if (matchTypeSelect) {
+      matchTypeSelect.value = cat;
+    }
+    showAlert(`Selected category: ${pill.textContent.trim()}. Enter your requirements and budget!`, "info");
+  });
 });
 
 btnSeekerBackHome.addEventListener("click", () => {
@@ -725,6 +782,7 @@ const seekerLocChips = document.querySelectorAll(".loc-chip-seeker");
 
 const matchResultsContainer = document.getElementById("match-results-container");
 const matchLoadingState = document.getElementById("match-loading-state");
+const matchLoadingStepText = document.getElementById("match-loading-step-text");
 const matchInitialState = document.getElementById("match-initial-state");
 const matchEmptyState = document.getElementById("match-empty-state");
 const resultsCountBadge = document.getElementById("results-count-badge");
@@ -827,6 +885,37 @@ function renderMatches(matches) {
     const mapsUrl = listing.google_maps_url || `https://www.google.com/maps?q=${listing.lat},${listing.lng}`;
     const locationName = listing.location_name || "Mumbai, India";
 
+    // Confidence badge mapping
+    let confBadgeHtml = "";
+    if (item.confidence_label) {
+      let confColorClass = "badge-weak-match";
+      if (item.confidence_label === "Strong Match") confColorClass = "badge-strong-match";
+      else if (item.confidence_label === "Good Match") confColorClass = "badge-good-match";
+      else if (item.confidence_label === "Partial Match") confColorClass = "badge-partial-match";
+      else if (item.confidence_label === "Weak Match") confColorClass = "badge-weak-match";
+
+      confBadgeHtml = `<span class="badge-confidence ${confColorClass}" title="Deterministic confidence: ${item.confidence_label}">${AI_SPARKLE_SVG} ${escapeHtml(item.confidence_label)}</span>`;
+    }
+
+    // Expandable "Why this match?" section (gracefully hidden if missing or empty)
+    let insightAccordionHtml = "";
+    if (item.insight && item.insight.trim()) {
+      insightAccordionHtml = `
+        <div class="match-insight-accordion">
+          <button type="button" class="match-insight-toggle" aria-expanded="false" title="Click to view AI reasoning breakdown">
+            <span class="insight-toggle-left">
+              <span class="insight-toggle-icon">${AI_SPARKLE_SVG}</span>
+              <span>Why this match?</span>
+            </span>
+            <span class="insight-toggle-arrow">▼</span>
+          </button>
+          <div class="match-insight-content">
+            <p class="match-insight-text">${escapeHtml(item.insight)}</p>
+          </div>
+        </div>
+      `;
+    }
+
     card.innerHTML = `
       <div class="match-card-top">
         <div class="match-rank-title">
@@ -837,6 +926,7 @@ function renderMatches(matches) {
         <div class="match-score-badge">
           <div class="match-pct">${finalPercent}%</div>
           <span class="match-pct-label">Match Score</span>
+          ${confBadgeHtml}
         </div>
       </div>
 
@@ -879,6 +969,8 @@ function renderMatches(matches) {
         </div>
       </div>
 
+      ${insightAccordionHtml}
+
       <div class="match-card-actions">
         <div>
           <span class="match-price-display">₹${Number(listing.price).toLocaleString("en-IN")} <small style="font-size:0.75rem; color:#64748B;">/ day</small></span>
@@ -889,6 +981,16 @@ function renderMatches(matches) {
         </button>
       </div>
     `;
+
+    // Hook Accordion Toggle
+    const insightToggle = card.querySelector(".match-insight-toggle");
+    if (insightToggle) {
+      insightToggle.addEventListener("click", () => {
+        const accordion = card.querySelector(".match-insight-accordion");
+        const isExpanded = accordion.classList.toggle("expanded");
+        insightToggle.setAttribute("aria-expanded", String(isExpanded));
+      });
+    }
 
     // Hook Negotiate CTA (Protected: Gated if unauthenticated)
     const btnNego = card.querySelector(".btn-negotiate-cta");
@@ -941,6 +1043,23 @@ matchForm.addEventListener("submit", async (e) => {
   matchInitialState.classList.add("hidden");
   matchEmptyState.classList.add("hidden");
 
+  // Sequential processing labels tied to genuine request stages
+  const matchStages = [
+    "Comparing descriptions with semantic TF-IDF...",
+    "Checking budget fit...",
+    "Calculating geospatial distance..."
+  ];
+  let currentStageIdx = 0;
+  if (matchLoadingStepText) {
+    matchLoadingStepText.textContent = matchStages[0];
+  }
+  const pacingInterval = setInterval(() => {
+    currentStageIdx = (currentStageIdx + 1) % matchStages.length;
+    if (matchLoadingStepText) {
+      matchLoadingStepText.textContent = matchStages[currentStageIdx];
+    }
+  }, 250);
+
   try {
     const payload = {
       description,
@@ -961,8 +1080,13 @@ matchForm.addEventListener("submit", async (e) => {
     showAlert(err.message || "Match search failed.", "error");
     matchInitialState.classList.remove("hidden");
   } finally {
+    // End pacing immediately upon response arrival — never outlasts actual network response
+    clearInterval(pacingInterval);
     setButtonLoading(btnSubmitMatch, false);
     matchLoadingState.classList.add("hidden");
+    if (matchLoadingStepText) {
+      matchLoadingStepText.textContent = "Evaluating semantic vectors, price fit, and distances...";
+    }
   }
 });
 
@@ -986,6 +1110,10 @@ function openNegotiationWithListing(listing) {
   document.getElementById("nego-settled-box").classList.add("hidden");
   document.getElementById("nego-nodeal-box").classList.add("hidden");
   document.getElementById("nego-initial-state").classList.remove("hidden");
+  if (settledNegotiationInsightBox) {
+    settledNegotiationInsightBox.classList.add("hidden");
+    if (settledNegotiationInsightText) settledNegotiationInsightText.textContent = "";
+  }
 
   showView("seeker");
   showSeekerSubView("negotiate");
@@ -1000,6 +1128,8 @@ const negoInitialState = document.getElementById("nego-initial-state");
 const negoSettledBox = document.getElementById("nego-settled-box");
 const settledClearingPrice = document.getElementById("settled-clearing-price");
 const settledSummaryText = document.getElementById("settled-summary-text");
+const settledNegotiationInsightBox = document.getElementById("settled-negotiation-insight-box");
+const settledNegotiationInsightText = document.getElementById("settled-negotiation-insight-text");
 const negoNoDealBox = document.getElementById("nego-nodeal-box");
 const noDealMessageText = document.getElementById("nodeal-message-text");
 
@@ -1031,6 +1161,10 @@ negotiateForm.addEventListener("submit", async (e) => {
   negoInitialState.classList.add("hidden");
   negoSettledBox.classList.add("hidden");
   negoNoDealBox.classList.add("hidden");
+  if (settledNegotiationInsightBox) {
+    settledNegotiationInsightBox.classList.add("hidden");
+    if (settledNegotiationInsightText) settledNegotiationInsightText.textContent = "";
+  }
 
   try {
     const payload = {
@@ -1049,6 +1183,18 @@ negotiateForm.addEventListener("submit", async (e) => {
     if (result.status === "settled") {
       settledClearingPrice.textContent = `₹${Number(result.clearing_price).toLocaleString("en-IN")}`;
       settledSummaryText.textContent = result.summary;
+
+      // Real negotiation insight display (gracefully hide if absent)
+      if (settledNegotiationInsightBox && settledNegotiationInsightText) {
+        if (result.negotiation_insight && result.negotiation_insight.trim()) {
+          settledNegotiationInsightText.textContent = result.negotiation_insight.trim();
+          settledNegotiationInsightBox.classList.remove("hidden");
+        } else {
+          settledNegotiationInsightText.textContent = "";
+          settledNegotiationInsightBox.classList.add("hidden");
+        }
+      }
+
       negoSettledBox.classList.remove("hidden");
     } else if (result.status === "no_deal") {
       noDealMessageText.textContent = result.message;
@@ -1081,3 +1227,252 @@ window.addEventListener("DOMContentLoaded", async () => {
   updateSeekerLocation("Bandra Kurla Complex (BKC), Mumbai", 19.0680, 72.8680);
   await restoreSession();
 });
+
+// ====================================================================
+// AI SEARCH ASSISTANT (Landing Page Floating & Embedded Chat Widget)
+// ====================================================================
+const aiChatWidget = document.getElementById("ai-chat-widget");
+const btnChatToggle = document.getElementById("btn-chat-toggle");
+const aiChatPanel = document.getElementById("ai-chat-panel");
+const btnChatClose = document.getElementById("btn-chat-close");
+const btnHeroChatTrigger = document.getElementById("btn-hero-chat-trigger");
+const chatMessages = document.getElementById("chat-messages");
+const chatForm = document.getElementById("chat-form");
+const chatInput = document.getElementById("chat-input");
+const btnChatSend = document.getElementById("btn-chat-send");
+const chatSuggestChips = document.querySelectorAll(".chat-suggest-chip");
+
+let isChatOpen = false;
+
+function setChatOpen(open) {
+  isChatOpen = open;
+  if (isChatOpen) {
+    aiChatPanel.classList.remove("hidden");
+    const sparkleIcon = btnChatToggle ? btnChatToggle.querySelector(".chat-icon-sparkle") : null;
+    const closeIcon = btnChatToggle ? btnChatToggle.querySelector(".chat-icon-close") : null;
+    if (sparkleIcon) sparkleIcon.classList.add("hidden");
+    if (closeIcon) closeIcon.classList.remove("hidden");
+    setTimeout(() => {
+      if (chatInput) chatInput.focus();
+    }, 120);
+  } else {
+    aiChatPanel.classList.add("hidden");
+    const sparkleIcon = btnChatToggle ? btnChatToggle.querySelector(".chat-icon-sparkle") : null;
+    const closeIcon = btnChatToggle ? btnChatToggle.querySelector(".chat-icon-close") : null;
+    if (sparkleIcon) sparkleIcon.classList.remove("hidden");
+    if (closeIcon) closeIcon.classList.add("hidden");
+  }
+}
+
+if (btnChatToggle) {
+  btnChatToggle.addEventListener("click", () => {
+    setChatOpen(!isChatOpen);
+  });
+}
+
+if (btnChatClose) {
+  btnChatClose.addEventListener("click", () => {
+    setChatOpen(false);
+  });
+}
+
+if (btnHeroChatTrigger) {
+  btnHeroChatTrigger.addEventListener("click", () => {
+    setChatOpen(true);
+  });
+}
+
+chatSuggestChips.forEach(chip => {
+  chip.addEventListener("click", () => {
+    if (chatInput) {
+      chatInput.value = chip.dataset.prompt;
+      handleChatSubmit();
+    }
+  });
+});
+
+/**
+ * Extracts budget amount from natural language query:
+ * e.g. "budget 20000", "under 20000", "rs 20000", "₹20000", "20000 rs"
+ */
+function extractBudgetFromText(text) {
+  if (!text) return 0;
+  
+  // Forward regex: "budget 20000", "budget: 20000", "under 20,000", "rs 20000", "rs. 20000", "₹20000", "₹ 20000"
+  const regex = /(?:budget|rs\.?|₹|under|price(?:\s*is)?)\s*:?\s*(\d[\d,]*)/i;
+  const match = text.match(regex);
+  if (match && match[1]) {
+    const parsed = parseFloat(match[1].replace(/,/g, ""));
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  
+  // Reverse regex: "20000 rs", "20000 inr", "20000 rupees"
+  const revRegex = /(\d[\d,]*)\s*(?:rs|inr|rupees)/i;
+  const revMatch = text.match(revRegex);
+  if (revMatch && revMatch[1]) {
+    const parsed = parseFloat(revMatch[1].replace(/,/g, ""));
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  
+  return 0;
+}
+
+function appendUserChatMessage(text) {
+  const msgEl = document.createElement("div");
+  msgEl.className = "chat-msg chat-msg-user";
+  msgEl.innerHTML = `
+    <div class="chat-msg-body">
+      <p>${escapeHtml(text)}</p>
+    </div>
+  `;
+  chatMessages.appendChild(msgEl);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function appendAssistantChatMessage(htmlContent) {
+  const msgEl = document.createElement("div");
+  msgEl.className = "chat-msg chat-msg-assistant";
+  msgEl.innerHTML = `
+    <div class="chat-msg-avatar">
+      ${AI_SPARKLE_SVG}
+    </div>
+    <div class="chat-msg-body">
+      ${htmlContent}
+    </div>
+  `;
+  chatMessages.appendChild(msgEl);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return msgEl;
+}
+
+async function handleChatSubmit() {
+  if (!chatInput) return;
+  const text = chatInput.value.trim();
+  if (!text) return;
+
+  appendUserChatMessage(text);
+  chatInput.value = "";
+  if (btnChatSend) btnChatSend.disabled = true;
+
+  // Real animated loading indicator in the assistant slot during network request
+  const typingIndicator = document.createElement("div");
+  typingIndicator.className = "chat-msg chat-msg-assistant";
+  typingIndicator.id = "chat-typing-bubble";
+  typingIndicator.innerHTML = `
+    <div class="chat-msg-avatar">
+      ${AI_SPARKLE_SVG}
+    </div>
+    <div class="chat-typing-indicator">
+      <span class="chat-typing-dot"></span>
+      <span class="chat-typing-dot"></span>
+      <span class="chat-typing-dot"></span>
+    </div>
+  `;
+  chatMessages.appendChild(typingIndicator);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  const extractedBudget = extractBudgetFromText(text);
+
+  try {
+    const payload = {
+      description: text,
+      budget: extractedBudget > 0 ? extractedBudget : 20000,
+      lat: 19.0760,
+      lng: 72.8777
+    };
+
+    // Honest network call to real backend /match endpoint
+    const data = await apiFetch("/match", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    // Remove loading indicator immediately upon response arrival
+    if (typingIndicator.parentNode) {
+      typingIndicator.parentNode.removeChild(typingIndicator);
+    }
+
+    const rawMatches = data.matches || [];
+    // Only display genuine semantic matches (filter out 0% semantic or Weak Matches)
+    const matches = rawMatches.filter(m => m.breakdown && m.breakdown.semantic > 0 && m.confidence_label !== "Weak Match");
+
+    if (matches.length > 0) {
+      const topMatches = matches.slice(0, 3);
+      const cardsHtml = topMatches.map(m => {
+        const item = m.listing;
+        const pct = Math.round(m.final_score * 100);
+        let confColorClass = "badge-weak-match";
+        if (m.confidence_label === "Strong Match") confColorClass = "badge-strong-match";
+        else if (m.confidence_label === "Good Match") confColorClass = "badge-good-match";
+        else if (m.confidence_label === "Partial Match") confColorClass = "badge-partial-match";
+
+        return `
+          <div class="chat-result-card">
+            <div class="chat-card-top">
+              <span class="chat-card-title">${escapeHtml(item.title)}</span>
+              <span class="badge-confidence ${confColorClass}">${AI_SPARKLE_SVG} ${escapeHtml(m.confidence_label || "Match")}</span>
+            </div>
+            <div class="chat-card-meta">
+              <span class="chat-card-price">₹${Number(item.price).toLocaleString("en-IN")}/day</span>
+              <span style="font-weight:700; color:var(--accent-indigo);">${pct}% Fit</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const content = `
+        <p>I found <strong>${matches.length} option(s)</strong> that match what you're looking for:</p>
+        <div class="chat-results-list">
+          ${cardsHtml}
+        </div>
+        <button type="button" class="btn-chat-view-full">
+          View full results &amp; negotiate &rarr;
+        </button>
+      `;
+
+      const msgEl = appendAssistantChatMessage(content);
+      const btnViewFull = msgEl.querySelector(".btn-chat-view-full");
+      if (btnViewFull) {
+        btnViewFull.addEventListener("click", () => {
+          showView("seeker");
+          const descInput = document.getElementById("match-desc");
+          const budgetInput = document.getElementById("match-budget");
+          if (descInput) descInput.value = text;
+          if (budgetInput && extractedBudget > 0) {
+            budgetInput.value = extractedBudget;
+          }
+          setChatOpen(false);
+          // Trigger search form to populate full results view
+          matchForm.dispatchEvent(new Event("submit", { cancelable: true }));
+        });
+      }
+    } else {
+      const emptyContent = `
+        <p>I couldn't find a strong match for that right now. Try adjusting the details, or browse all listings below.</p>
+        <button type="button" class="btn-chat-view-full" style="margin-top:8px;">Browse Seeker Portal &rarr;</button>
+      `;
+      const msgEl = appendAssistantChatMessage(emptyContent);
+      const btnBrowse = msgEl.querySelector(".btn-chat-view-full");
+      if (btnBrowse) {
+        btnBrowse.addEventListener("click", () => {
+          showView("seeker");
+          setChatOpen(false);
+        });
+      }
+    }
+  } catch (err) {
+    if (typingIndicator.parentNode) {
+      typingIndicator.parentNode.removeChild(typingIndicator);
+    }
+    appendAssistantChatMessage("<p>Something went wrong reaching the matching engine. Please try again.</p>");
+  } finally {
+    if (btnChatSend) btnChatSend.disabled = false;
+  }
+}
+
+if (chatForm) {
+  chatForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    handleChatSubmit();
+  });
+}

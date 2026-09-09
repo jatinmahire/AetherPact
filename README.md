@@ -198,7 +198,40 @@ python -m http.server 3000 --directory frontend
 | `POST` | `/listings` | **Provider Only** | Create and publish a new hospitality asset listing |
 | `POST` | `/match` | Public | Run live TF-IDF semantic and geospatial match against listings |
 | `POST` | `/negotiate` | **Authenticated** | Execute deterministic bilateral ZOPA settlement calculation |
+| `GET` | `/` | Public | Service root status and quick documentation links |
 | `GET` | `/health` | Public | Service health verification and system status check |
+
+---
+
+## ☁️ Live Cloud Deployment (Render & Vercel)
+
+AetherPact is pre-configured for instant zero-config deployment across **Render** (FastAPI backend) and **Vercel** (static frontend).
+
+### 1. Deploy the Backend on Render
+1. Create an account on [Render](https://render.com/).
+2. Click **New +** &rarr; **Blueprint** (or **Web Service**):
+   - **Using Blueprint (Recommended)**: Connect your `AetherPact` repository. Render will automatically detect [`render.yaml`](file:///render.yaml) and configure build and start commands.
+   - **Manual Web Service Setup**:
+     - **Repository**: `https://github.com/jatinmahire/AetherPact`
+     - **Runtime**: `Python 3`
+     - **Root Directory**: `backend`
+     - **Build Command**: `pip install -r requirements.txt`
+     - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+     - **Health Check Path**: `/health`
+3. Click **Deploy Web Service**. Once deployed, copy your live backend URL (e.g., `https://aetherpact-backend.onrender.com`).
+
+### 2. Deploy the Frontend on Vercel
+1. Log in to [Vercel](https://vercel.com/).
+2. Click **Add New...** &rarr; **Project** and import the `AetherPact` GitHub repository.
+3. The project includes [`vercel.json`](file:///vercel.json) pre-configured with `"outputDirectory": "frontend"`.
+4. Click **Deploy**. Your frontend is now live at `https://your-project.vercel.app` (e.g., `https://aether-pact.vercel.app`).
+
+### 3. Connect Frontend to Render Backend
+You can link your live Vercel frontend to your Render backend in any of three easy ways:
+- **Instant URL Parameter**: Open your live Vercel URL with `?api=https://your-app.onrender.com` (e.g., `https://aether-pact.vercel.app?api=https://aetherpact-backend.onrender.com`). It automatically stores the URL in browser `localStorage`!
+- **Browser Console**: Run `setBackendUrl("https://your-app.onrender.com")` in DevTools.
+- **Direct in Code**: Set `const API_BASE = "https://your-app.onrender.com";` at the top of [`frontend/script.js`](file:///frontend/script.js).
+
 
 ---
 
