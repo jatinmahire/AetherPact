@@ -24,8 +24,9 @@
        TOP NAVIGATION (Dynamic across Landing, Provider, and Seeker portals)
        ==================================================================== -->
   <header class="app-header">
+    <div class="header-top-accent"></div>
     <div class="header-container">
-      <div class="brand" id="nav-brand-link" style="cursor: pointer;">
+      <div class="brand" id="nav-brand-link" style="cursor: pointer;" title="Back to AetherPact Home">
         <div class="brand-logo" aria-hidden="true">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -37,16 +38,30 @@
             <span class="brand-title">AetherPact</span>
             <span class="brand-tag" id="portal-role-tag">Hospitality Network</span>
           </div>
-          <p class="brand-subtitle">Commercial Resource Sharing & Bilateral Settlement</p>
+          <p class="brand-subtitle">Commercial Resource Sharing &amp; Bilateral Settlement</p>
         </div>
       </div>
+
+      <!-- Navigation Links -->
+      <nav class="header-nav-links" id="header-nav-links" aria-label="Main Navigation">
+        <a href="#section-how-it-works" class="nav-link" id="nav-link-how">How It Works</a>
+        <a href="#section-engine" class="nav-link" id="nav-link-engine">Intelligence</a>
+        <a href="#section-settlement" class="nav-link" id="nav-link-settlement">ZOPA Clearing</a>
+        <a href="#section-catalog" class="nav-link" id="nav-link-catalog">Mumbai Assets</a>
+        <a href="#section-faq" class="nav-link" id="nav-link-faq">FAQ</a>
+      </nav>
 
       <!-- Navigation Actions (Swapped dynamically based on Auth State) -->
       <div class="nav-auth-actions" id="nav-auth-actions">
         <!-- Logged-out state -->
         <div id="nav-logged-out" class="nav-user-cluster">
-          <button type="button" class="btn btn-outline btn-sm" id="btn-header-login">
-            Login / Register
+          <button type="button" class="btn btn-header-search" id="btn-header-search" title="Find Resources">
+            <span class="btn-icon">🔍</span>
+            <span class="nav-action-text">Find Venues</span>
+          </button>
+          <button type="button" class="btn btn-header-login" id="btn-header-login">
+            <span class="btn-icon">✨</span>
+            <span>Sign In</span>
           </button>
         </div>
 
@@ -179,7 +194,7 @@
     </div>
 
     <!-- How It Works Section -->
-    <div class="how-it-works-section">
+    <div class="how-it-works-section" id="section-how-it-works">
       <div class="how-it-works-container">
         <div class="section-title-wrap reveal-on-scroll reveal-up">
           <div class="section-pill-tag">Interactive Architecture</div>
@@ -270,7 +285,7 @@
     </div>
 
     <!-- SECTION 3: TRI-FACTOR INTELLIGENCE ENGINE DEEP DIVE -->
-    <div class="landing-content-section engine-showcase-section">
+    <div class="landing-content-section engine-showcase-section" id="section-engine">
       <div class="section-inner-container">
         <div class="section-title-wrap reveal-on-scroll reveal-up">
           <div class="section-pill-tag">VERIFIABLE MATHEMATICS</div>
@@ -336,7 +351,7 @@
     </div>
 
     <!-- SECTION 4: SETTLEMENT ENGINE VS TRADITIONAL BROKERAGE -->
-    <div class="landing-content-section settlement-showcase-section">
+    <div class="landing-content-section settlement-showcase-section" id="section-settlement">
       <div class="section-inner-container">
         <div class="section-title-wrap reveal-on-scroll reveal-up">
           <div class="section-pill-tag">FINANCIAL GAME THEORY</div>
@@ -436,7 +451,7 @@
     </div>
 
     <!-- SECTION 5: FEATURED MUMBAI HOSPITALITY ASSETS -->
-    <div class="landing-content-section featured-catalog-section">
+    <div class="landing-content-section featured-catalog-section" id="section-catalog">
       <div class="section-inner-container">
         <div class="section-title-wrap reveal-on-scroll reveal-up">
           <div class="section-pill-tag">LIVE MUMBAI INVENTORY</div>
@@ -610,7 +625,7 @@
     </div>
 
     <!-- SECTION 7: INTERACTIVE FAQ ACCORDION -->
-    <div class="landing-content-section landing-faq-section">
+    <div class="landing-content-section landing-faq-section" id="section-faq">
       <div class="section-inner-container">
         <div class="section-title-wrap reveal-on-scroll reveal-up">
           <div class="section-pill-tag">FREQUENTLY ASKED QUESTIONS</div>

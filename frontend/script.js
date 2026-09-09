@@ -173,6 +173,29 @@ navBrandLink.addEventListener("click", () => {
   }
 });
 
+// Header Search Shortcut Button
+const btnHeaderSearch = document.getElementById("btn-header-search");
+if (btnHeaderSearch) {
+  btnHeaderSearch.addEventListener("click", () => {
+    showView("seeker");
+  });
+}
+
+// Smooth scrolling for header nav links
+document.querySelectorAll(".header-nav-links .nav-link").forEach(link => {
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    const targetId = link.getAttribute("href").replace("#", "");
+    showView("landing");
+    setTimeout(() => {
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 60);
+  });
+});
+
 // Landing Page CTAs
 btnLandingBrowse.addEventListener("click", () => {
   showView("seeker");
