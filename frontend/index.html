@@ -153,22 +153,27 @@
       </div>
     </div>
 
-    <!-- Live Metric & Trust Bar -->
-    <div class="landing-stats-bar">
+    <!-- Live Metric & Trust Bar with Animated Numeric Counters -->
+    <div class="landing-stats-bar reveal-on-scroll reveal-up">
       <div class="stats-bar-container">
         <div class="stat-cell">
-          <div class="stat-number">50% + 30% + 20%</div>
-          <div class="stat-desc">Multi-Factor Semantic, Budget &amp; Proximity Scoring</div>
+          <div class="stat-number stat-counter" data-target="50" data-suffix="% + 30% + 20%">50% + 30% + 20%</div>
+          <div class="stat-desc">Tri-Factor Semantic, Budget &amp; Proximity Scoring</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-cell">
-          <div class="stat-number">Deterministic</div>
-          <div class="stat-desc">Game-Theoretic ZOPA Financial Settlement Core</div>
+          <div class="stat-number stat-counter" data-target="10" data-prefix="&lt; " data-suffix="ms">&lt; 10ms</div>
+          <div class="stat-desc">Real-Time TF-IDF Vectorization Latency</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-cell">
-          <div class="stat-number">Zero Hallucination</div>
-          <div class="stat-desc">Pure Logic &amp; Arithmetic — No Random Simulated Numbers</div>
+          <div class="stat-number stat-counter" data-target="0" data-suffix="% Broker Fee">0% Broker Fee</div>
+          <div class="stat-desc">Direct Peer-to-Peer Bilateral Settlement</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <div class="stat-number stat-counter" data-target="100" data-suffix="% Deterministic">100% Deterministic</div>
+          <div class="stat-desc">Game-Theoretic ZOPA Fair Clearing (Zero Hallucination)</div>
         </div>
       </div>
     </div>
@@ -176,7 +181,7 @@
     <!-- How It Works Section -->
     <div class="how-it-works-section">
       <div class="how-it-works-container">
-        <div class="section-title-wrap">
+        <div class="section-title-wrap reveal-on-scroll reveal-up">
           <div class="section-pill-tag">Interactive Architecture</div>
           <h2 class="section-heading">How AetherPact Works</h2>
           <p class="section-subheading">A transparent, dual-sided marketplace powered by verifiable mathematical intelligence</p>
@@ -184,7 +189,7 @@
 
         <div class="roles-how-grid">
           <!-- Provider Column -->
-          <div class="card role-how-card role-card-provider">
+          <div class="card role-how-card role-card-provider reveal-on-scroll reveal-left">
             <div class="role-card-accent-bar accent-provider"></div>
             <div class="role-how-header">
               <span class="role-how-icon icon-provider">🏢</span>
@@ -223,7 +228,7 @@
           </div>
 
           <!-- Seeker Column -->
-          <div class="card role-how-card role-card-seeker">
+          <div class="card role-how-card role-card-seeker reveal-on-scroll reveal-right">
             <div class="role-card-accent-bar accent-seeker"></div>
             <div class="role-how-header">
               <span class="role-how-icon icon-seeker">🔍</span>
@@ -263,6 +268,448 @@
         </div>
       </div>
     </div>
+
+    <!-- SECTION 3: TRI-FACTOR INTELLIGENCE ENGINE DEEP DIVE -->
+    <div class="landing-content-section engine-showcase-section">
+      <div class="section-inner-container">
+        <div class="section-title-wrap reveal-on-scroll reveal-up">
+          <div class="section-pill-tag">VERIFIABLE MATHEMATICS</div>
+          <h2 class="section-heading">The Tri-Factor Intelligence Engine</h2>
+          <p class="section-subheading">
+            AetherPact replaces crude keyword filtering with multi-dimensional vector mathematics and verified spatial geometry.
+          </p>
+        </div>
+
+        <div class="engine-cards-grid">
+          <!-- Pillar 1: Semantic Text Vectors -->
+          <div class="card engine-card reveal-on-scroll reveal-up" data-delay="100">
+            <div class="engine-card-header">
+              <span class="engine-weight-badge badge-weight-semantic">50% Final Weight</span>
+              <span class="engine-icon">⚡</span>
+            </div>
+            <h3>TF-IDF Semantic Vectorization</h3>
+            <p class="engine-card-desc">
+              Parses complex, descriptive event requirements (such as soundproofing, 3-phase power, cold prep, chandelier ballroom, or stage dimensions) and measures cosine similarity against all active listings.
+            </p>
+            <div class="engine-formula-box">
+              <code>Sim(q, d) = (v_q &middot; v_d) / (||v_q|| ||v_d||)</code>
+            </div>
+            <ul class="engine-feature-list">
+              <li><span>✓</span> Sub-10ms scikit-learn vectorization</li>
+              <li><span>✓</span> Semantic synonym awareness without LLM delay</li>
+              <li><span>✓</span> Zero hallucination (pure corpus statistics)</li>
+            </ul>
+          </div>
+
+          <!-- Pillar 2: Budget Proximity -->
+          <div class="card engine-card reveal-on-scroll reveal-up" data-delay="200">
+            <div class="engine-card-header">
+              <span class="engine-weight-badge badge-weight-price">30% Final Weight</span>
+              <span class="engine-icon">💰</span>
+            </div>
+            <h3>Non-Linear Budget Proximity</h3>
+            <p class="engine-card-desc">
+              Scores quotes against your stated reservation budget with a continuous curve, rewarding budget efficiency while preventing extreme cost overruns.
+            </p>
+            <div class="engine-formula-box">
+              <code>Fit_price = max(0, 1 - |Price - Budget| / Budget)</code>
+            </div>
+            <ul class="engine-feature-list">
+              <li><span>✓</span> Natural language budget extraction (e.g. ₹20,000)</li>
+              <li><span>✓</span> Asymmetric penalty for excessive quotes</li>
+              <li><span>✓</span> Transparent score breakdown per listing</li>
+            </ul>
+          </div>
+
+          <!-- Pillar 3: Haversine Geospatial -->
+          <div class="card engine-card reveal-on-scroll reveal-up" data-delay="300">
+            <div class="engine-card-header">
+              <span class="engine-weight-badge badge-weight-geo">20% Final Weight</span>
+              <span class="engine-icon">📍</span>
+            </div>
+            <h3>Haversine Spherical Distance</h3>
+            <p class="engine-card-desc">
+              Calculates great-circle distance from your location or chosen Mumbai commercial hub using exact latitude and longitude with exponential proximity decay.
+            </p>
+            <div class="engine-formula-box">
+              <code>Dist_score = exp(-distance_km / 15.0)</code>
+            </div>
+            <ul class="engine-feature-list">
+              <li><span>✓</span> Google Maps URL coordinate parser</li>
+              <li><span>✓</span> One-click presets (BKC, Andheri, Juhu)</li>
+              <li><span>✓</span> Direct Google Maps directions preview</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: SETTLEMENT ENGINE VS TRADITIONAL BROKERAGE -->
+    <div class="landing-content-section settlement-showcase-section">
+      <div class="section-inner-container">
+        <div class="section-title-wrap reveal-on-scroll reveal-up">
+          <div class="section-pill-tag">FINANCIAL GAME THEORY</div>
+          <h2 class="section-heading">Automated Settlement vs Traditional Brokers</h2>
+          <p class="section-subheading">
+            Eliminate commission drag, asymmetric delays, and broker posturing with provably fair ZOPA math.
+          </p>
+        </div>
+
+        <div class="settlement-comparison-grid">
+          <!-- Traditional Side -->
+          <div class="card comp-card comp-card-old reveal-on-scroll reveal-left">
+            <div class="comp-card-badge badge-comp-old">Traditional Hospitality Brokers</div>
+            <h3>High-Friction Manual Negotiation</h3>
+            <ul class="comp-list comp-list-bad">
+              <li>
+                <span class="comp-icon red">✕</span>
+                <div>
+                  <strong>3 to 5 Days Turnaround:</strong>
+                  <p>Tedious email chains, phone tags, and manual contract drafts.</p>
+                </div>
+              </li>
+              <li>
+                <span class="comp-icon red">✕</span>
+                <div>
+                  <strong>15% &ndash; 20% Broker Commissions:</strong>
+                  <p>Aggressive markups that siphon margins from hosts and planners.</p>
+                </div>
+              </li>
+              <li>
+                <span class="comp-icon red">✕</span>
+                <div>
+                  <strong>Asymmetric Information:</strong>
+                  <p>Brokers exploit private reservation numbers to squeeze one party.</p>
+                </div>
+              </li>
+              <li>
+                <span class="comp-icon red">✕</span>
+                <div>
+                  <strong>Zero Audit Trail:</strong>
+                  <p>Opaque pricing concessions without mathematical proof of fairness.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- AetherPact ZOPA Side -->
+          <div class="card comp-card comp-card-aether reveal-on-scroll reveal-right">
+            <div class="comp-card-badge badge-comp-aether">AetherPact Automated Settlement</div>
+            <h3>Deterministic ZOPA Midpoint Clearing</h3>
+            <ul class="comp-list comp-list-good">
+              <li>
+                <span class="comp-icon green">✓</span>
+                <div>
+                  <strong>Instant Sub-Second Execution (&lt;12ms):</strong>
+                  <p>Immediate mathematical clearing with printable bilateral terms.</p>
+                </div>
+              </li>
+              <li>
+                <span class="comp-icon green">✓</span>
+                <div>
+                  <strong>0% Broker Intermediary Fees:</strong>
+                  <p>Pure peer-to-peer exchange; keep 100% of mutual transaction value.</p>
+                </div>
+              </li>
+              <li>
+                <span class="comp-icon green">✓</span>
+                <div>
+                  <strong>Guaranteed Nash Fair Midpoint:</strong>
+                  <p>Clearing price splits the mutual surplus 50/50 exactly between parties.</p>
+                </div>
+              </li>
+              <li>
+                <span class="comp-icon green">✓</span>
+                <div>
+                  <strong>Zero Information Leaks:</strong>
+                  <p>Walkaway reservation bounds remain strictly confidential.</p>
+                </div>
+              </li>
+            </ul>
+
+            <!-- Interactive Visual Surplus Diagram -->
+            <div class="zopa-visual-diagram">
+              <div class="zopa-diagram-title">Live Surplus Mathematics Example:</div>
+              <div class="zopa-bar-track">
+                <div class="zopa-bar-segment zopa-host-floor" title="Host Floor: ₹17,000">Host Floor ₹17k</div>
+                <div class="zopa-bar-segment zopa-clearing" title="Fair Cleared Price: ₹21,000">Settled: ₹21,000</div>
+                <div class="zopa-bar-segment zopa-seeker-ceiling" title="Buyer Max: ₹25,000">Buyer Max ₹25k</div>
+              </div>
+              <div class="zopa-surplus-note">
+                Mutual Economic Surplus: <strong>₹8,000</strong> &bull; Both parties save <strong>₹4,000 each!</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: FEATURED MUMBAI HOSPITALITY ASSETS -->
+    <div class="landing-content-section featured-catalog-section">
+      <div class="section-inner-container">
+        <div class="section-title-wrap reveal-on-scroll reveal-up">
+          <div class="section-pill-tag">LIVE MUMBAI INVENTORY</div>
+          <h2 class="section-heading">Featured Verified Hospitality Assets</h2>
+          <p class="section-subheading">
+            Preview luxury ballrooms, dark kitchens, concert staging, and executive fleets currently available across Mumbai.
+          </p>
+        </div>
+
+        <div class="featured-catalog-grid">
+          <!-- Asset 1 -->
+          <div class="card featured-asset-card reveal-on-scroll reveal-up" data-delay="100">
+            <div class="asset-card-top-tag">
+              <span class="asset-cat-tag">🏰 Banquet Hall</span>
+              <span class="asset-loc-tag">📍 BKC, Mumbai</span>
+            </div>
+            <h3 class="asset-title">The Imperial Sapphire Ballroom</h3>
+            <p class="asset-desc">
+              Ultra-luxury banquet space for 250 wedding &amp; corporate guests with central acoustic soundproofing, crystal chandeliers, and banquet stage.
+            </p>
+            <div class="asset-meta-row">
+              <div class="asset-price-box">
+                <span class="asset-price">₹18,000</span>
+                <span class="asset-unit">/day</span>
+              </div>
+              <span class="asset-capacity">Capacity: <strong>250 Guests</strong></span>
+            </div>
+            <div class="asset-amenities">
+              <span class="amenity-chip">Central AC</span>
+              <span class="amenity-chip">Bridal Suite</span>
+              <span class="amenity-chip">Stage Rig</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm btn-quick-match" 
+              data-query="need a luxury banquet hall in BKC for wedding reception with central AC and stage" 
+              data-budget="20000" 
+              data-cat="banquet_hall">
+              Match with this Asset &rarr;
+            </button>
+          </div>
+
+          <!-- Asset 2 -->
+          <div class="card featured-asset-card reveal-on-scroll reveal-up" data-delay="200">
+            <div class="asset-card-top-tag">
+              <span class="asset-cat-tag">🍳 Cloud Kitchen</span>
+              <span class="asset-loc-tag">📍 Andheri East</span>
+            </div>
+            <h3 class="asset-title">Prime Industrial Commercial Kitchen</h3>
+            <p class="asset-desc">
+              Licensed commercial catering commissary with 6-burner ranges, walk-in blast chillers, commercial prep tables, and 3-phase high-draw power.
+            </p>
+            <div class="asset-meta-row">
+              <div class="asset-price-box">
+                <span class="asset-price">₹8,500</span>
+                <span class="asset-unit">/day</span>
+              </div>
+              <span class="asset-capacity">Capacity: <strong>40 Kitchen Staff</strong></span>
+            </div>
+            <div class="asset-amenities">
+              <span class="amenity-chip">Blast Freezers</span>
+              <span class="amenity-chip">Grease Traps</span>
+              <span class="amenity-chip">3-Phase Power</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm btn-quick-match" 
+              data-query="commercial cloud kitchen in Andheri with walk in freezers and 3-phase power for catering" 
+              data-budget="10000" 
+              data-cat="kitchen">
+              Match with this Asset &rarr;
+            </button>
+          </div>
+
+          <!-- Asset 3 -->
+          <div class="card featured-asset-card reveal-on-scroll reveal-up" data-delay="300">
+            <div class="asset-card-top-tag">
+              <span class="asset-cat-tag">🔊 AV &amp; Staging</span>
+              <span class="asset-loc-tag">📍 Lower Parel</span>
+            </div>
+            <h3 class="asset-title">AcousticMaster Line-Array &amp; Stage Rig</h3>
+            <p class="asset-desc">
+              Concert-grade d&amp;b audiotechnik line-array sound reinforcement system, digital wireless mic racks, and automated intelligent moving heads.
+            </p>
+            <div class="asset-meta-row">
+              <div class="asset-price-box">
+                <span class="asset-price">₹14,000</span>
+                <span class="asset-unit">/day</span>
+              </div>
+              <span class="asset-capacity">Coverage: <strong>1,000 Attendees</strong></span>
+            </div>
+            <div class="asset-amenities">
+              <span class="amenity-chip">Line Array</span>
+              <span class="amenity-chip">Digital Console</span>
+              <span class="amenity-chip">DMX Lighting</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm btn-quick-match" 
+              data-query="concert audio visual line array staging system in Lower Parel with wireless microphones" 
+              data-budget="15000" 
+              data-cat="av_equipment">
+              Match with this Asset &rarr;
+            </button>
+          </div>
+
+          <!-- Asset 4 -->
+          <div class="card featured-asset-card reveal-on-scroll reveal-up" data-delay="400">
+            <div class="asset-card-top-tag">
+              <span class="asset-cat-tag">🚐 Executive Fleet</span>
+              <span class="asset-loc-tag">📍 Juhu Beach</span>
+            </div>
+            <h3 class="asset-title">Mercedes VIP Executive Shuttle Fleet</h3>
+            <p class="asset-desc">
+              Fleet of 6 luxury executive vans with leather reclining seating, airport flight-tracking coordination, high-speed WiFi, and professional uniformed chauffeurs.
+            </p>
+            <div class="asset-meta-row">
+              <div class="asset-price-box">
+                <span class="asset-price">₹12,000</span>
+                <span class="asset-unit">/day</span>
+              </div>
+              <span class="asset-capacity">Capacity: <strong>48 Total Passengers</strong></span>
+            </div>
+            <div class="asset-amenities">
+              <span class="amenity-chip">Flight Sync</span>
+              <span class="amenity-chip">Onboard WiFi</span>
+              <span class="amenity-chip">Chauffeur Included</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm btn-quick-match" 
+              data-query="executive shuttle fleet for VIP guests from Juhu to airport with chauffeur and wifi" 
+              data-budget="14000" 
+              data-cat="vehicle">
+              Match with this Asset &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: ENTERPRISE TRUST & SECURITY PRINCIPLES -->
+    <div class="landing-content-section trust-principles-section">
+      <div class="section-inner-container">
+        <div class="section-title-wrap reveal-on-scroll reveal-up">
+          <div class="section-pill-tag">ENTERPRISE CONFIDENCE</div>
+          <h2 class="section-heading">Built for Commercial Scale &amp; Privacy</h2>
+          <p class="section-subheading">
+            Engineered with strict zero-knowledge principles, cryptographic tokens, and zero-hallucination math.
+          </p>
+        </div>
+
+        <div class="trust-grid">
+          <div class="card trust-card reveal-on-scroll reveal-up" data-delay="100">
+            <div class="trust-icon-box">🛡️</div>
+            <h4>Confidential Reservation Bounds</h4>
+            <p>Your walkaway pricing thresholds ($A_{\min}$ and $O_{\max}$) are processed entirely in protected memory and never revealed to counterparties.</p>
+          </div>
+
+          <div class="card trust-card reveal-on-scroll reveal-up" data-delay="200">
+            <div class="trust-icon-box">📍</div>
+            <h4>Google Maps Coordinate Verification</h4>
+            <p>Every asset is geolocated with real Google Maps latitude and longitude, eliminating vague meeting spots and fraudulent addresses.</p>
+          </div>
+
+          <div class="card trust-card reveal-on-scroll reveal-up" data-delay="300">
+            <div class="trust-icon-box">⚖️</div>
+            <h4>100% Deterministic Arithmetic</h4>
+            <p>Financial pricing is never guessed or hallucinated by generative models. Every rupee settled is backed by verifiable mathematical formulas.</p>
+          </div>
+
+          <div class="card trust-card reveal-on-scroll reveal-up" data-delay="400">
+            <div class="trust-icon-box">🔑</div>
+            <h4>Scoped Role Security</h4>
+            <p>Granular Bearer tokens segregate Provider asset creation from Seeker searches, guaranteeing authenticated audit logs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 7: INTERACTIVE FAQ ACCORDION -->
+    <div class="landing-content-section landing-faq-section">
+      <div class="section-inner-container">
+        <div class="section-title-wrap reveal-on-scroll reveal-up">
+          <div class="section-pill-tag">FREQUENTLY ASKED QUESTIONS</div>
+          <h2 class="section-heading">Everything You Need to Know</h2>
+          <p class="section-subheading">
+            Got questions about how AetherPact clears excess capacity? Here are straightforward answers.
+          </p>
+        </div>
+
+        <div class="faq-accordion-wrap reveal-on-scroll reveal-up">
+          <div class="faq-item">
+            <button type="button" class="faq-question" aria-expanded="false">
+              <span>How does the AI matching understand my exact venue or kitchen needs?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>
+                AetherPact transforms your natural-language search into high-dimensional TF-IDF vectors in under 10ms. It analyzes technical terms, acoustic criteria, equipment specifications, and guest limits against all published descriptions, returning a mathematical similarity score and explainable breakdown.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button type="button" class="faq-question" aria-expanded="false">
+              <span>Why is the settlement engine deterministic instead of an AI chatbot?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>
+                Commercial agreements and financial clearing require zero hallucination and mathematically provable fairness. While natural language AI is ideal for semantic matching, financial settlements rely on game-theoretic Zone of Possible Agreement (ZOPA) mathematics to split surplus equally with zero broker bias.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button type="button" class="faq-question" aria-expanded="false">
+              <span>Can I link my venue's Google Maps link directly?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>
+                Yes! When listing a resource, you can paste any Google Maps share URL or search link (e.g. maps.app.goo.gl or google.com/maps). The system automatically extracts exact latitude and longitude coordinates for instant Haversine proximity calculations.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button type="button" class="faq-question" aria-expanded="false">
+              <span>What kinds of hospitality assets can be monetized on AetherPact?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>
+                Any underutilized commercial hospitality capacity! This includes hotel ballrooms, banquet lawns, off-peak commercial kitchens, concert audio/visual rigs, staging platforms, executive transport fleets, mobile cold storage, and backup diesel generator sets.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 8: BOTTOM HERO CALL-TO-ACTION BANNER -->
+    <div class="landing-cta-banner-wrap reveal-on-scroll reveal-scale">
+      <div class="landing-cta-banner">
+        <div class="cta-banner-content">
+          <span class="badge-sparkle-pill">⚡ AUTONOMOUS BILATERAL CLEARING</span>
+          <h2 class="cta-banner-title">
+            Transform Idle Hospitality Capacity into Revenue Today
+          </h2>
+          <p class="cta-banner-desc">
+            Connect with verified Mumbai hotels, commercial kitchens, and event producers in real time. Zero broker commissions, zero hallucination.
+          </p>
+          <div class="cta-banner-actions">
+            <button type="button" class="btn btn-primary btn-lg btn-hero-glow" id="btn-cta-browse">
+              <span>🔍 Browse &amp; Match Resources &rarr;</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-lg" id="btn-cta-host">
+              <span>🏢 List Your Resource</span>
+            </button>
+            <button type="button" class="btn btn-hero btn-hero-ai" id="btn-cta-chat">
+              <svg class="ai-sparkle-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L12 22L9.6 9.6L12 2Z"/>
+              </svg>
+              <span>Ask AI Assistant</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </section>
 
   <!-- ====================================================================

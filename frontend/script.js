@@ -1476,3 +1476,183 @@ if (chatForm) {
     handleChatSubmit();
   });
 }
+
+// ====================================================================
+// SCROLL ANIMATIONS, NUMERIC COUNTERS, & INTERACTIVE SHOWCASE HANDLERS
+// ====================================================================
+
+function initScrollAnimations() {
+  const scrollElements = document.querySelectorAll(".reveal-on-scroll");
+
+  if (!("IntersectionObserver" in window)) {
+    scrollElements.forEach(el => el.classList.add("is-revealed"));
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-revealed");
+        
+        // Trigger rolling counters inside this element if present
+        const counters = entry.target.querySelectorAll(".stat-counter");
+        counters.forEach(counter => animateCounter(counter));
+
+        obs.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.12,
+    rootMargin: "0px 0px -40px 0px"
+  });
+
+  scrollElements.forEach(el => observer.observe(el));
+}
+
+function animateCounter(el) {
+  if (el.dataset.animated === "true") return;
+  el.dataset.animated = "true";
+
+  const target = parseFloat(el.dataset.target) || 0;
+  const prefix = el.dataset.prefix || "";
+  const suffix = el.dataset.suffix || "";
+  const duration = 1400; // ms
+  const startTime = performance.now();
+
+  function updateCount(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease-out cubic formula
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+    const currentVal = Math.round(easeProgress * target);
+
+    el.textContent = `${prefix}${currentVal}${suffix}`;
+
+    if (progress < 1) {
+      requestAnimationFrame(updateCount);
+    } else {
+      el.textContent = `${prefix}${target}${suffix}`;
+    }
+  }
+
+  requestAnimationFrame(updateCount);
+}
+
+// Ambient aurora background parallax on scroll
+window.addEventListener("scroll", () => {
+  const auroraContainer = document.getElementById("aurora-glow-container");
+  if (auroraContainer) {
+    const scrollY = window.scrollY || window.pageYOffset;
+    auroraContainer.style.transform = `translate3d(0, ${scrollY * 0.14}px, 0)`;
+  }
+}, { passive: true });
+
+// 3D Card Tilt on Mouse Move
+function init3DCardTilt() {
+  const cards = document.querySelectorAll(".engine-card, .featured-asset-card, .comp-card");
+  
+  cards.forEach(card => {
+    card.addEventListener("mousemove", (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const rotateX = ((y - centerY) / centerY) * -4;
+      const rotateY = ((x - centerX) / centerX) * 4;
+      
+      card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-4px)`;
+    });
+
+    card.addEventListener("mouseleave", () => {
+      card.style.transform = "";
+    });
+  });
+}
+
+// FAQ Accordion Listeners
+function initFaqAccordion() {
+  const faqItems = document.querySelectorAll(".faq-item");
+  faqItems.forEach(item => {
+    const btn = item.querySelector(".faq-question");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        const isActive = item.classList.contains("active");
+        faqItems.forEach(i => {
+          i.classList.remove("active");
+          const b = i.querySelector(".faq-question");
+          if (b) b.setAttribute("aria-expanded", "false");
+        });
+
+        if (!isActive) {
+          item.classList.add("active");
+          btn.setAttribute("aria-expanded", "true");
+        }
+      });
+    }
+  });
+}
+
+// Quick Match triggers from Featured Mumbai Assets
+function initFeaturedAssetTriggers() {
+  const quickMatchBtns = document.querySelectorAll(".btn-quick-match");
+  quickMatchBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const query = btn.dataset.query;
+      const budget = btn.dataset.budget;
+      const cat = btn.dataset.cat;
+
+      showView("seeker");
+      const descInput = document.getElementById("match-desc");
+      const budgetInput = document.getElementById("match-budget");
+      const catSelect = document.getElementById("match-type");
+
+      if (descInput) descInput.value = query;
+      if (budgetInput) budgetInput.value = budget;
+      if (catSelect) catSelect.value = cat;
+
+      showAlert(`Pre-loaded asset criteria! Generating AI matches...`, "info");
+      matchForm.dispatchEvent(new Event("submit", { cancelable: true }));
+    });
+  });
+}
+
+// Bottom CTA Banner Handlers
+const btnCtaBrowse = document.getElementById("btn-cta-browse");
+const btnCtaHost = document.getElementById("btn-cta-host");
+const btnCtaChat = document.getElementById("btn-cta-chat");
+
+if (btnCtaBrowse) {
+  btnCtaBrowse.addEventListener("click", () => {
+    showView("seeker");
+  });
+}
+
+if (btnCtaHost) {
+  btnCtaHost.addEventListener("click", () => {
+    if (currentUser && currentUser.role === "provider") {
+      showView("provider");
+    } else {
+      openAuthModal({
+        lockedRole: "provider",
+        contextMessage: "Register as a Hospitality Provider to list venues and equipment.",
+        defaultTab: "register"
+      });
+    }
+  });
+}
+
+if (btnCtaChat) {
+  btnCtaChat.addEventListener("click", () => {
+    setChatOpen(true);
+  });
+}
+
+// Initialize Landing Page Enhancements
+initScrollAnimations();
+init3DCardTilt();
+initFaqAccordion();
+initFeaturedAssetTriggers();
+
