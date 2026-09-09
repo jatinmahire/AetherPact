@@ -46,7 +46,7 @@ window.setBackendUrl = function(url) {
   }
   const clean = url.trim().replace(/\/+$/, "");
   localStorage.setItem("aether_api_url", clean);
-  console.log(`✅ Backend URL updated to: ${clean}`);
+  console.log(`[API] Backend URL updated to: ${clean}`);
   alert(`Backend URL updated to: ${clean}\nReloading page to connect...`);
   window.location.reload();
 };
@@ -252,10 +252,15 @@ btnBackToMatches.addEventListener("click", () => {
 
 // Toast / Notification helper
 function showAlert(message, type = "error") {
-  const iconMap = { error: "❌", warning: "⚠️", success: "✓", info: "ℹ️" };
+  const iconMap = {
+    error: `<svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+    warning: `<svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
+    success: `<svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+    info: `<svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
+  };
   globalAlert.className = `alert-banner alert-${type}`;
   alertMessage.textContent = message;
-  if (alertIcon) alertIcon.textContent = iconMap[type] || "ℹ️";
+  if (alertIcon) alertIcon.innerHTML = iconMap[type] || iconMap.info;
   globalAlert.classList.remove("hidden");
 
   if (type === "success") {
@@ -689,7 +694,7 @@ function renderListings(items) {
         <span class="listing-badge ${badgeClass}">${escapeHtml(formatResourceType(item.resource_type))}</span>
       </div>
       <div class="listing-location-tag">
-        <span>📍</span>
+        <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
         <span>${escapeHtml(locationName)}</span>
       </div>
       <p class="listing-desc">${escapeHtml(item.description)}</p>
@@ -699,7 +704,8 @@ function renderListings(items) {
           <span style="font-size: 0.8rem; color: #64748B; margin-left: 8px;">Capacity: <strong>${item.capacity}</strong></span>
         </div>
         <a href="${mapsLink}" target="_blank" rel="noopener" class="btn-map-redirect" title="Open in Google Maps">
-          <span>📍 View on Google Maps ↗</span>
+          <svg class="ui-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <span>View on Google Maps ↗</span>
         </a>
       </div>
     `;
@@ -853,18 +859,18 @@ btnUseGps.addEventListener("click", () => {
     return;
   }
 
-  btnUseGps.textContent = "📍 Locating...";
+  btnUseGps.innerHTML = '<svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Locating...';
   navigator.geolocation.getCurrentPosition(
     (position) => {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
       matchLocationInput.value = `https://www.google.com/maps?q=${lat.toFixed(4)},${lng.toFixed(4)}`;
       updateSeekerLocation(`Your GPS Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`, lat, lng);
-      btnUseGps.textContent = "📍 Use My Current Location";
+      btnUseGps.innerHTML = '<svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg> Use My Current Location';
       showAlert("GPS coordinates acquired!", "success");
     },
     () => {
-      btnUseGps.textContent = "📍 Use My Current Location";
+      btnUseGps.innerHTML = '<svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg> Use My Current Location';
       showAlert("Could not access location. Please select an area above.", "warning");
     }
   );
@@ -930,7 +936,7 @@ function renderMatches(matches) {
               <span class="insight-toggle-icon">${AI_SPARKLE_SVG}</span>
               <span>Why this match?</span>
             </span>
-            <span class="insight-toggle-arrow">▼</span>
+            <span class="insight-toggle-arrow"><svg class="ui-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
           </button>
           <div class="match-insight-content">
             <p class="match-insight-text">${escapeHtml(item.insight)}</p>
@@ -955,12 +961,13 @@ function renderMatches(matches) {
 
       <div class="match-location-bar">
         <div class="match-loc-info">
-          <span>📍</span>
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
           <span>${escapeHtml(locationName)}</span>
           <span class="match-distance-tag">(${bd.distance_km.toFixed(1)} km away)</span>
         </div>
         <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn-map-redirect" title="Open in Google Maps">
-          <span>📍 View on Google Maps ↗</span>
+          <svg class="ui-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <span>View on Google Maps ↗</span>
         </a>
       </div>
 

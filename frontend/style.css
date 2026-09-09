@@ -51,6 +51,157 @@
   --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
+/* ====================================================================
+   Crisp Vector UI Icon System (Replaces Raw Emojis)
+   ==================================================================== */
+.ui-icon {
+  display: inline-block;
+  stroke-width: 2;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -2px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, stroke 0.2s ease;
+}
+
+.ui-icon.fill-current {
+  fill: currentColor;
+  stroke: none;
+}
+
+.btn-icon .ui-icon,
+.btn .ui-icon {
+  vertical-align: -2px;
+}
+
+.chip-icon .ui-icon {
+  vertical-align: 0;
+}
+
+.role-how-icon .ui-icon {
+  vertical-align: 0;
+}
+
+.engine-icon .ui-icon {
+  vertical-align: 0;
+}
+
+.loc-status-icon .ui-icon {
+  vertical-align: -1px;
+}
+
+.input-icon .ui-icon {
+  vertical-align: -1px;
+}
+
+.asset-cat-tag,
+.asset-loc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.quick-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.quick-cat-pill .ui-icon {
+  color: #A5B4FC;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.quick-cat-pill:hover .ui-icon {
+  color: #FFFFFF;
+  transform: scale(1.1);
+}
+
+.trust-icon-box {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(165, 180, 252, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  transition: all 0.25s ease;
+}
+
+.trust-card:hover .trust-icon-box {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.35);
+  transform: translateY(-2px);
+}
+
+.terms-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.terms-icon .ui-icon {
+  vertical-align: 0;
+}
+
+.nego-insight-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nego-insight-icon .ui-icon {
+  vertical-align: -2px;
+}
+
+.btn-use-gps {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-use-gps .ui-icon {
+  vertical-align: -1px;
+}
+
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-tag .ui-icon {
+  vertical-align: -1px;
+}
+
+.listing-location-tag,
+.match-loc-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-map-redirect {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-map-redirect .ui-icon {
+  vertical-align: -1px;
+}
+
+.empty-icon svg {
+  display: block;
+  margin: 0 auto 12px;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -2821,7 +2972,13 @@ textarea { resize: vertical; }
 }
 
 .engine-icon {
-  font-size: 1.6rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .engine-card h3 {
