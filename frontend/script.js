@@ -1,76 +1,185 @@
 const API_BASE = "PASTE_YOUR_RENDER_BACKEND_URL_HERE";
 
 /**
- * Resolves the active backend API root.
- * If API_BASE contains the placeholder, it falls back to http://127.0.0.1:8000 for local development.
+ * Resolves active backend API root.
+ * Falls back to http://127.0.0.1:8000 for local development.
  */
 function getApiRoot() {
   if (API_BASE && API_BASE !== "PASTE_YOUR_RENDER_BACKEND_URL_HERE" && API_BASE.trim() !== "") {
     return API_BASE.replace(/\/+$/, "");
   }
-  // Local development fallback
   return "http://127.0.0.1:8000";
 }
 
-// Global DOM references
-const apiStatusDot = document.getElementById("api-status-dot");
-const apiStatusText = document.getElementById("api-status-text");
-const apiUrlDisplay = document.getElementById("api-url-display");
+// Global Auth State
+let currentToken = localStorage.getItem("aether_token") || null;
+let currentUser = null;
+try {
+  const storedUser = localStorage.getItem("aether_user");
+  if (storedUser) currentUser = JSON.parse(storedUser);
+} catch (_) {
+  currentUser = null;
+}
+
+// Pending action callback upon authentication
+let pendingAuthCallback = null;
+
+// DOM References: Views
+const viewLanding = document.getElementById("view-landing");
+const viewProvider = document.getElementById("view-provider");
+const viewSeeker = document.getElementById("view-seeker");
+const seekerSearchView = document.getElementById("seeker-search-view");
+const seekerNegotiateView = document.getElementById("seeker-negotiate-view");
+
+// Navigation & Auth Elements
+const navBrandLink = document.getElementById("nav-brand-link");
+const portalRoleTag = document.getElementById("portal-role-tag");
+const navLoggedOut = document.getElementById("nav-logged-out");
+const navLoggedIn = document.getElementById("nav-logged-in");
+const navUserName = document.getElementById("nav-user-name");
+const navUserRole = document.getElementById("nav-user-role");
+const btnHeaderLogin = document.getElementById("btn-header-login");
+const btnHeaderLogout = document.getElementById("btn-header-logout");
+
+// Landing Page CTAs
+const btnLandingBrowse = document.getElementById("btn-landing-browse");
+const btnLandingList = document.getElementById("btn-landing-list");
+const btnRoleHostCta = document.getElementById("btn-role-host-cta");
+const btnRoleSeekerCta = document.getElementById("btn-role-seeker-cta");
+
+// Seeker Navigation
+const btnSeekerBackHome = document.getElementById("btn-seeker-back-home");
+const btnBackToMatches = document.getElementById("btn-back-to-matches");
+
+// Auth Modal Elements
+const authModal = document.getElementById("auth-modal");
+const btnCloseModal = document.getElementById("btn-close-modal");
+const tabAuthLogin = document.getElementById("tab-auth-login");
+const tabAuthRegister = document.getElementById("tab-auth-register");
+const formLogin = document.getElementById("form-login");
+const formRegister = document.getElementById("form-register");
+const btnSubmitLogin = document.getElementById("btn-submit-login");
+const btnSubmitRegister = document.getElementById("btn-submit-register");
+const modalErrorBox = document.getElementById("modal-error-box");
+const modalErrorText = document.getElementById("modal-error-text");
+const modalContextNotice = document.getElementById("modal-context-notice");
+const modalContextMessage = document.getElementById("modal-context-message");
+const regRoleSelect = document.getElementById("reg-role");
+const regRoleHint = document.getElementById("reg-role-hint");
+
+// Global Toast Banner
 const globalAlert = document.getElementById("global-alert");
 const alertMessage = document.getElementById("alert-message");
 const alertIcon = document.getElementById("alert-icon");
 const btnCloseAlert = document.getElementById("btn-close-alert");
 
-// Tab Navigation
-const tabButtons = document.querySelectorAll(".tab-btn");
-const tabPanes = document.querySelectorAll(".tab-pane");
+// ====================================================================
+// VIEW ROUTER & NAVIGATION
+// ====================================================================
 
-function switchTab(targetPaneId) {
-  tabButtons.forEach(btn => {
-    if (btn.dataset.target === targetPaneId) {
-      btn.classList.add("active");
-    } else {
-      btn.classList.remove("active");
-    }
-  });
+function showView(viewName) {
+  viewLanding.classList.add("hidden");
+  viewProvider.classList.add("hidden");
+  viewSeeker.classList.add("hidden");
 
-  tabPanes.forEach(pane => {
-    if (pane.id === targetPaneId) {
-      pane.classList.remove("hidden");
-    } else {
-      pane.classList.add("hidden");
-    }
-  });
-
-  if (history.replaceState) {
-    history.replaceState(null, null, `#${targetPaneId}`);
+  if (viewName === "provider") {
+    viewProvider.classList.remove("hidden");
+    portalRoleTag.textContent = "Provider Portal";
+    loadListings();
+  } else if (viewName === "seeker") {
+    viewSeeker.classList.remove("hidden");
+    portalRoleTag.textContent = "Seeker Portal";
+    showSeekerSubView("search");
+  } else {
+    viewLanding.classList.remove("hidden");
+    portalRoleTag.textContent = "Hospitality Network";
   }
 }
 
-tabButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    switchTab(btn.dataset.target);
-  });
+function showSeekerSubView(subView) {
+  if (subView === "negotiate") {
+    seekerSearchView.classList.add("hidden");
+    seekerNegotiateView.classList.remove("hidden");
+  } else {
+    seekerSearchView.classList.remove("hidden");
+    seekerNegotiateView.classList.add("hidden");
+  }
+}
+
+function updateNavAuthState() {
+  if (currentToken && currentUser) {
+    navLoggedOut.classList.add("hidden");
+    navLoggedIn.classList.remove("hidden");
+    navUserName.textContent = currentUser.name || "Member";
+    navUserRole.textContent = currentUser.role || "user";
+  } else {
+    navLoggedOut.classList.remove("hidden");
+    navLoggedIn.classList.add("hidden");
+  }
+}
+
+// Brand click handler
+navBrandLink.addEventListener("click", () => {
+  if (currentUser && currentUser.role === "provider") {
+    showView("provider");
+  } else if (currentUser && currentUser.role === "seeker") {
+    showView("seeker");
+  } else {
+    showView("landing");
+  }
+});
+
+// Landing Page CTAs
+btnLandingBrowse.addEventListener("click", () => {
+  showView("seeker");
+});
+
+btnRoleSeekerCta.addEventListener("click", () => {
+  showView("seeker");
+});
+
+btnLandingList.addEventListener("click", () => {
+  if (currentUser && currentUser.role === "provider") {
+    showView("provider");
+  } else {
+    openAuthModal({
+      lockedRole: "provider",
+      contextMessage: "Register as a Hospitality Provider to list venues and equipment.",
+      defaultTab: "register"
+    });
+  }
+});
+
+btnRoleHostCta.addEventListener("click", () => {
+  if (currentUser && currentUser.role === "provider") {
+    showView("provider");
+  } else {
+    openAuthModal({
+      lockedRole: "provider",
+      contextMessage: "Register as a Hospitality Provider to list venues and equipment.",
+      defaultTab: "register"
+    });
+  }
+});
+
+btnSeekerBackHome.addEventListener("click", () => {
+  showView("landing");
+});
+
+btnBackToMatches.addEventListener("click", () => {
+  showSeekerSubView("search");
 });
 
 // Toast / Notification helper
 function showAlert(message, type = "error") {
-  const iconMap = {
-    error: "❌",
-    warning: "⚠️",
-    success: "✓",
-    info: "ℹ️"
-  };
+  const iconMap = { error: "❌", warning: "⚠️", success: "✓", info: "ℹ️" };
   globalAlert.className = `alert-banner alert-${type}`;
   alertMessage.textContent = message;
   if (alertIcon) alertIcon.textContent = iconMap[type] || "ℹ️";
   globalAlert.classList.remove("hidden");
 
-  // Auto hide success alerts after 5 seconds
   if (type === "success") {
-    setTimeout(() => {
-      globalAlert.classList.add("hidden");
-    }, 5000);
+    setTimeout(() => { globalAlert.classList.add("hidden"); }, 5000);
   }
 }
 
@@ -104,61 +213,256 @@ function setButtonLoading(button, isLoading, loadingText = "Processing...") {
   }
 }
 
-// Safe API Fetch Wrapper
+// Safe API Fetch Wrapper with Automatic Auth Header
 async function apiFetch(endpoint, options = {}) {
   const root = getApiRoot();
   const url = `${root}${endpoint}`;
 
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+
+  if (currentToken) {
+    headers["Authorization"] = `Bearer ${currentToken}`;
+  }
+
   try {
     const response = await fetch(url, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers || {})
-      }
+      headers
     });
 
+    const data = await response.json().catch(() => null);
+
     if (!response.ok) {
-      let errorDetail = `HTTP ${response.status}`;
-      try {
-        const errJson = await response.json();
-        if (errJson.detail) {
-          errorDetail = typeof errJson.detail === "string" 
-            ? errJson.detail 
-            : JSON.stringify(errJson.detail);
-        }
-      } catch (_) {}
-      throw new Error(errorDetail);
+      let msg = `HTTP ${response.status}`;
+      if (data) {
+        msg = data.error || data.detail || (typeof data === "string" ? data : JSON.stringify(data));
+      }
+      const err = new Error(msg);
+      err.status = response.status;
+      err.data = data;
+      throw err;
     }
 
-    return await response.json();
+    return data;
   } catch (err) {
     console.error(`API Error on ${endpoint}:`, err);
     if (err.message && (err.message.includes("Failed to fetch") || err.message.includes("NetworkError") || err.message.includes("Load failed"))) {
-      throw new Error("Could not reach the server — check your connection or verify the backend is running.");
+      throw new Error("Could not reach the server — check your connection or verify backend is running.");
     }
     throw err;
   }
 }
 
-// Health Check
-async function checkBackendHealth() {
-  const root = getApiRoot();
-  if (apiUrlDisplay) apiUrlDisplay.textContent = root.replace(/^https?:\/\//, "");
+// ====================================================================
+// AUTHENTICATION MODAL & SESSION MANAGEMENT
+// ====================================================================
+
+function openAuthModal({ lockedRole = null, contextMessage = null, defaultTab = "login", onSuccess = null } = {}) {
+  pendingAuthCallback = onSuccess;
+  modalErrorBox.classList.add("hidden");
+
+  if (contextMessage) {
+    modalContextMessage.textContent = contextMessage;
+    modalContextNotice.classList.remove("hidden");
+  } else {
+    modalContextNotice.classList.add("hidden");
+  }
+
+  if (lockedRole) {
+    regRoleSelect.value = lockedRole;
+    regRoleSelect.disabled = true;
+    regRoleHint.textContent = `Role pre-set to ${lockedRole === "provider" ? "Host / Provider" : "Seeker / Planner"}.`;
+  } else {
+    regRoleSelect.disabled = false;
+    regRoleHint.textContent = "Choose whether you plan to list spaces or book them.";
+  }
+
+  if (defaultTab === "register") {
+    switchAuthTab("register");
+  } else {
+    switchAuthTab("login");
+  }
+
+  authModal.classList.remove("hidden");
+}
+
+function closeAuthModal() {
+  authModal.classList.add("hidden");
+  modalErrorBox.classList.add("hidden");
+  formLogin.reset();
+  formRegister.reset();
+}
+
+function switchAuthTab(tab) {
+  modalErrorBox.classList.add("hidden");
+  if (tab === "register") {
+    tabAuthRegister.classList.add("active");
+    tabAuthLogin.classList.remove("active");
+    formRegister.classList.remove("hidden");
+    formLogin.classList.add("hidden");
+  } else {
+    tabAuthLogin.classList.add("active");
+    tabAuthRegister.classList.remove("active");
+    formLogin.classList.remove("hidden");
+    formRegister.classList.add("hidden");
+  }
+}
+
+tabAuthLogin.addEventListener("click", () => switchAuthTab("login"));
+tabAuthRegister.addEventListener("click", () => switchAuthTab("register"));
+btnCloseModal.addEventListener("click", closeAuthModal);
+btnHeaderLogin.addEventListener("click", () => openAuthModal());
+
+// Logout Handler
+btnHeaderLogout.addEventListener("click", () => {
+  localStorage.removeItem("aether_token");
+  localStorage.removeItem("aether_user");
+  currentToken = null;
+  currentUser = null;
+  updateNavAuthState();
+  showView("landing");
+  showAlert("Logged out successfully.", "info");
+});
+
+// Login Form Submit
+formLogin.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  modalErrorBox.classList.add("hidden");
+
+  const email = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
+
+  if (!email || !password) {
+    showModalError("Please enter email and password.");
+    return;
+  }
+
+  setButtonLoading(btnSubmitLogin, true, "Signing in...");
 
   try {
-    const data = await apiFetch("/health");
-    if (data && data.status === "ok") {
-      if (apiStatusDot) apiStatusDot.className = "status-dot online";
-      if (apiStatusText) apiStatusText.textContent = "Online & Ready";
-      return true;
+    const data = await apiFetch("/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password })
+    });
+
+    currentToken = data.token;
+    currentUser = data.user;
+    localStorage.setItem("aether_token", currentToken);
+    localStorage.setItem("aether_user", JSON.stringify(currentUser));
+
+    updateNavAuthState();
+    closeAuthModal();
+    showAlert(`Welcome back, ${currentUser.name}!`, "success");
+
+    // Execute pending action callback if present (e.g. continue negotiation)
+    if (typeof pendingAuthCallback === "function") {
+      const cb = pendingAuthCallback;
+      pendingAuthCallback = null;
+      cb();
     } else {
-      throw new Error("Invalid status");
+      // Immediate routing based on role
+      if (currentUser.role === "provider") {
+        showView("provider");
+      } else {
+        showView("seeker");
+      }
     }
   } catch (err) {
-    if (apiStatusDot) apiStatusDot.className = "status-dot offline";
-    if (apiStatusText) apiStatusText.textContent = "Backend Offline";
-    return false;
+    showModalError(err.message || "Invalid email or password");
+  } finally {
+    setButtonLoading(btnSubmitLogin, false);
+  }
+});
+
+// Register Form Submit
+formRegister.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  modalErrorBox.classList.add("hidden");
+
+  const name = document.getElementById("reg-name").value.trim();
+  const email = document.getElementById("reg-email").value.trim();
+  const password = document.getElementById("reg-password").value;
+  const role = regRoleSelect.value;
+
+  if (!name || !email || !password) {
+    showModalError("Please fill in all fields.");
+    return;
+  }
+
+  setButtonLoading(btnSubmitRegister, true, "Creating Account...");
+
+  try {
+    const data = await apiFetch("/register", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password, role })
+    });
+
+    currentToken = data.token;
+    currentUser = data.user;
+    localStorage.setItem("aether_token", currentToken);
+    localStorage.setItem("aether_user", JSON.stringify(currentUser));
+
+    updateNavAuthState();
+    closeAuthModal();
+    showAlert(`Welcome to AetherPact, ${currentUser.name}!`, "success");
+
+    if (typeof pendingAuthCallback === "function") {
+      const cb = pendingAuthCallback;
+      pendingAuthCallback = null;
+      cb();
+    } else {
+      if (currentUser.role === "provider") {
+        showView("provider");
+      } else {
+        showView("seeker");
+      }
+    }
+  } catch (err) {
+    showModalError(err.message || "Registration failed");
+  } finally {
+    setButtonLoading(btnSubmitRegister, false);
+  }
+});
+
+function showModalError(msg) {
+  modalErrorText.textContent = msg;
+  modalErrorBox.classList.remove("hidden");
+}
+
+// Session restore on page load
+async function restoreSession() {
+  if (!currentToken) {
+    showView("landing");
+    updateNavAuthState();
+    return;
+  }
+
+  try {
+    const user = await apiFetch("/me");
+    if (user && user.id) {
+      currentUser = user;
+      localStorage.setItem("aether_user", JSON.stringify(currentUser));
+      updateNavAuthState();
+
+      if (currentUser.role === "provider") {
+        showView("provider");
+      } else {
+        showView("seeker");
+      }
+    } else {
+      throw new Error("Invalid session");
+    }
+  } catch (err) {
+    console.warn("Session restore failed, returning to landing page:", err);
+    localStorage.removeItem("aether_token");
+    localStorage.removeItem("aether_user");
+    currentToken = null;
+    currentUser = null;
+    updateNavAuthState();
+    showView("landing");
   }
 }
 
@@ -166,41 +470,29 @@ async function checkBackendHealth() {
 // GOOGLE MAPS & LOCATION PARSING UTILITIES
 // ====================================================================
 
-// Regex coordinate extractor
 function extractCoordsFromGoogleMaps(text) {
   if (!text) return null;
   const str = String(text).trim();
 
-  // Pattern 1: @lat,lng
   const atMatch = str.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (atMatch) {
-    return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
-  }
+  if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
 
-  // Pattern 2: ?q=lat,lng or &q=lat,lng or ll=lat,lng or destination=lat,lng
   const qMatch = str.match(/[?&](?:q|ll|destination)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (qMatch) {
-    return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
-  }
+  if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
 
-  // Pattern 3: raw comma coordinates "19.0760, 72.8777"
   const rawMatch = str.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
-  if (rawMatch) {
-    return { lat: parseFloat(rawMatch[1]), lng: parseFloat(rawMatch[2]) };
-  }
+  if (rawMatch) return { lat: parseFloat(rawMatch[1]), lng: parseFloat(rawMatch[2]) };
 
   return null;
 }
 
-// Preset locations dictionary for Mumbai hubs
 const MUMBAI_HUBS = {
   bkc: { name: "Bandra Kurla Complex (BKC), Mumbai", lat: 19.0680, lng: 72.8680 },
   bandra: { name: "Bandra West, Mumbai", lat: 19.0550, lng: 72.8250 },
   andheri: { name: "Andheri East Industrial Area, Mumbai", lat: 19.1150, lng: 72.8680 },
   marine_drive: { name: "Marine Drive, Mumbai", lat: 18.9430, lng: 72.8230 },
   juhu: { name: "Juhu Beach, Mumbai", lat: 19.0980, lng: 72.8260 },
-  lower_parel: { name: "Lower Parel Media Hub, Mumbai", lat: 19.0010, lng: 72.8290 },
-  dadar: { name: "Dadar Central, Mumbai", lat: 19.0178, lng: 72.8478 }
+  lower_parel: { name: "Lower Parel Media Hub, Mumbai", lat: 19.0010, lng: 72.8290 }
 };
 
 function resolveLocationText(text) {
@@ -215,7 +507,7 @@ function resolveLocationText(text) {
 }
 
 // ====================================================================
-// TAB 1 — HOST / LIST A RESOURCE (PROVIDER)
+// PROVIDER PORTAL (List a Resource & Community Directory)
 // ====================================================================
 const listingForm = document.getElementById("listing-form");
 const btnSubmitListing = document.getElementById("btn-submit-listing");
@@ -226,7 +518,6 @@ const listingsEmptyState = document.getElementById("listings-empty-state");
 const listingSuccessBox = document.getElementById("listing-success-box");
 const listingSuccessDetails = document.getElementById("listing-success-details");
 
-// Location Inputs & Badges (Tab 1)
 const listingMapsInput = document.getElementById("listing-maps-url");
 const listingLocStatus = document.getElementById("listing-loc-status");
 const listingLocText = document.getElementById("listing-loc-text");
@@ -251,7 +542,6 @@ function updateListingLocation(name, lat, lng, rawUrl = null) {
   listingLocStatus.classList.remove("hidden");
 }
 
-// Listen to user typing or pasting Google Maps link in Tab 1
 listingMapsInput.addEventListener("input", () => {
   const val = listingMapsInput.value.trim();
   if (!val) return;
@@ -259,10 +549,9 @@ listingMapsInput.addEventListener("input", () => {
   const coords = extractCoordsFromGoogleMaps(val);
   if (coords) {
     updateListingLocation("Google Maps Location", coords.lat, coords.lng, val);
-    showAlert("Google Maps coordinates detected and verified!", "success");
+    showAlert("Google Maps location detected and verified!", "success");
     providerLocChips.forEach(c => c.classList.remove("active"));
   } else {
-    // Check if user typed an area name like "Bandra" or "Andheri"
     const resolved = resolveLocationText(val);
     if (resolved) {
       updateListingLocation(resolved.name, resolved.lat, resolved.lng);
@@ -270,7 +559,6 @@ listingMapsInput.addEventListener("input", () => {
   }
 });
 
-// Click on quick location chips
 providerLocChips.forEach(chip => {
   chip.addEventListener("click", () => {
     providerLocChips.forEach(c => c.classList.remove("active"));
@@ -285,7 +573,6 @@ providerLocChips.forEach(chip => {
   });
 });
 
-// Category display formatter
 function formatResourceType(typeStr) {
   const map = {
     banquet_hall: "Banquet Hall",
@@ -297,7 +584,6 @@ function formatResourceType(typeStr) {
   return map[typeStr] || typeStr.replace(/_/g, " ");
 }
 
-// Render active community listings with clickable Google Maps link
 function renderListings(items) {
   listingsContainer.innerHTML = "";
 
@@ -332,7 +618,7 @@ function renderListings(items) {
           <span class="listing-rate">₹${priceFormatted} <small>/ day</small></span>
           <span style="font-size: 0.8rem; color: #64748B; margin-left: 8px;">Capacity: <strong>${item.capacity}</strong></span>
         </div>
-        <a href="${mapsLink}" target="_blank" rel="noopener" class="btn-map-redirect" title="Open venue on Google Maps">
+        <a href="${mapsLink}" target="_blank" rel="noopener" class="btn-map-redirect" title="Open in Google Maps">
           <span>📍 View on Google Maps ↗</span>
         </a>
       </div>
@@ -342,7 +628,6 @@ function renderListings(items) {
   });
 }
 
-// Load listings from backend
 async function loadListings() {
   listingsLoadingState.classList.remove("hidden");
   listingsEmptyState.classList.add("hidden");
@@ -359,11 +644,19 @@ async function loadListings() {
 
 btnRefreshListings.addEventListener("click", loadListings);
 
-// Submit new listing
+// Submit new listing (Protected)
 listingForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   hideAlert();
   listingSuccessBox.classList.add("hidden");
+
+  if (!currentUser || currentUser.role !== "provider") {
+    openAuthModal({
+      lockedRole: "provider",
+      contextMessage: "Please log in as a provider to list a resource."
+    });
+    return;
+  }
 
   const title = document.getElementById("listing-title").value.trim();
   const description = document.getElementById("listing-desc").value.trim();
@@ -402,13 +695,12 @@ listingForm.addEventListener("submit", async (e) => {
 
     listingSuccessBox.classList.remove("hidden");
     listingSuccessDetails.innerHTML = `
-      <p><strong>${escapeHtml(created.title)}</strong> has been published!</p>
+      <p><strong>${escapeHtml(created.title)}</strong> has been published to the community!</p>
       <p>Location: ${escapeHtml(created.location_name)} &bull; Day Rate: ₹${Number(created.price).toLocaleString("en-IN")}</p>
-      <p style="margin-top: 6px;"><a href="${created.google_maps_url}" target="_blank" rel="noopener" style="color: #047857; font-weight: 700;">View in Google Maps ↗</a></p>
+      <p style="margin-top: 6px;"><a href="${created.google_maps_url}" target="_blank" rel="noopener" style="color: #047857; font-weight: 700;">View on Google Maps ↗</a></p>
     `;
 
     listingForm.reset();
-    // Reset to default location
     updateListingLocation("Bandra Kurla Complex (BKC), Mumbai", 19.0680, 72.8680);
     await loadListings();
   } catch (err) {
@@ -419,7 +711,7 @@ listingForm.addEventListener("submit", async (e) => {
 });
 
 // ====================================================================
-// TAB 2 — FIND A RESOURCE (SEEKER)
+// SEEKER PORTAL (Search & Negotiate Subviews)
 // ====================================================================
 const matchForm = document.getElementById("match-form");
 const btnSubmitMatch = document.getElementById("btn-submit-match");
@@ -443,7 +735,6 @@ function updateSeekerLocation(name, lat, lng) {
   seekerLocText.textContent = `Location set to ${name}`;
 }
 
-// User types/pastes in seeker location input
 matchLocationInput.addEventListener("input", () => {
   const val = matchLocationInput.value.trim();
   if (!val) return;
@@ -451,7 +742,7 @@ matchLocationInput.addEventListener("input", () => {
   const coords = extractCoordsFromGoogleMaps(val);
   if (coords) {
     updateSeekerLocation("Google Maps Pin", coords.lat, coords.lng);
-    showAlert("Seeker location parsed from Google Maps!", "success");
+    showAlert("Location parsed from Google Maps!", "success");
     seekerLocChips.forEach(c => c.classList.remove("active"));
   } else {
     const resolved = resolveLocationText(val);
@@ -461,7 +752,6 @@ matchLocationInput.addEventListener("input", () => {
   }
 });
 
-// Click on quick location chips (Seeker)
 seekerLocChips.forEach(chip => {
   chip.addEventListener("click", () => {
     seekerLocChips.forEach(c => c.classList.remove("active"));
@@ -476,7 +766,6 @@ seekerLocChips.forEach(chip => {
   });
 });
 
-// Browser GPS Geolocation Button
 btnUseGps.addEventListener("click", () => {
   if (!navigator.geolocation) {
     showAlert("Geolocation is not supported by your browser.", "warning");
@@ -489,28 +778,26 @@ btnUseGps.addEventListener("click", () => {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
       matchLocationInput.value = `https://www.google.com/maps?q=${lat.toFixed(4)},${lng.toFixed(4)}`;
-      updateSeekerLocation(`Your Current Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`, lat, lng);
+      updateSeekerLocation(`Your GPS Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`, lat, lng);
       btnUseGps.textContent = "📍 Use My Current Location";
-      showAlert("Current GPS location acquired successfully!", "success");
+      showAlert("GPS coordinates acquired!", "success");
     },
-    (error) => {
+    () => {
       btnUseGps.textContent = "📍 Use My Current Location";
       showAlert("Could not access location. Please select an area above.", "warning");
     }
   );
 });
 
-// Sample Search Button
 btnSampleSearch.addEventListener("click", () => {
   document.getElementById("match-desc").value = "need a luxury banquet hall for 200 wedding guests with stage, soundproofing, and central AC";
   document.getElementById("match-budget").value = "20000";
   document.getElementById("match-type").value = "banquet_hall";
   matchLocationInput.value = "Bandra Kurla Complex (BKC), Mumbai";
   updateSeekerLocation("Bandra Kurla Complex (BKC), Mumbai", 19.0680, 72.8680);
-  showAlert("Loaded realistic wedding venue search! Click 'Find Matching Resources'.", "info");
+  showAlert("Sample search loaded! Click 'Find Matching Resources'.", "info");
 });
 
-// Render Ranked Match Cards with Google Maps Button and Breakdown Bars
 function renderMatches(matches) {
   matchResultsContainer.innerHTML = "";
   matchInitialState.classList.add("hidden");
@@ -553,7 +840,6 @@ function renderMatches(matches) {
         </div>
       </div>
 
-      <!-- Clickable Google Maps Location Bar -->
       <div class="match-location-bar">
         <div class="match-loc-info">
           <span>📍</span>
@@ -567,7 +853,6 @@ function renderMatches(matches) {
 
       <p class="match-desc">${escapeHtml(listing.description)}</p>
 
-      <!-- Live Algorithmic Score Breakdown Bars -->
       <div class="breakdown-box">
         <div class="meter-row">
           <span class="meter-label">Requirement Fit (50%)</span>
@@ -605,17 +890,35 @@ function renderMatches(matches) {
       </div>
     `;
 
-    // Hook Negotiate CTA to pre-fill Tab 3
+    // Hook Negotiate CTA (Protected: Gated if unauthenticated)
     const btnNego = card.querySelector(".btn-negotiate-cta");
     btnNego.addEventListener("click", () => {
-      openNegotiationWithListing(listing);
+      handleNegotiateClick(listing);
     });
 
     matchResultsContainer.appendChild(card);
   });
 }
 
-// Match Form Submission
+function handleNegotiateClick(listing) {
+  if (currentToken && currentUser) {
+    // Already authenticated: proceed straight to negotiation view
+    openNegotiationWithListing(listing);
+  } else {
+    // Unauthenticated: gate action with Auth Modal pre-set to "seeker"
+    openAuthModal({
+      lockedRole: "seeker",
+      contextMessage: "Log in or create a free account to continue with this rental request.",
+      defaultTab: "register",
+      onSuccess: () => {
+        // Automatically continue into Negotiate view for this exact listing!
+        openNegotiationWithListing(listing);
+      }
+    });
+  }
+}
+
+// Public Match Form Submission
 matchForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   hideAlert();
@@ -663,7 +966,7 @@ matchForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Pre-fill Tab 3 from a chosen listing
+// Pre-fill Negotiate Subview from listing
 function openNegotiationWithListing(listing) {
   const providerAsk = listing.price;
   const providerMin = Math.round(providerAsk * 0.85);
@@ -680,18 +983,16 @@ function openNegotiationWithListing(listing) {
   document.getElementById("nego-seeker-max").value = seekerMax;
   document.getElementById("nego-extra-terms").value = `Listing #${listing.id}: ${listing.title}`;
 
-  // Reset settlement state
   document.getElementById("nego-settled-box").classList.add("hidden");
   document.getElementById("nego-nodeal-box").classList.add("hidden");
   document.getElementById("nego-initial-state").classList.remove("hidden");
 
-  switchTab("tab-pane-3");
-  showAlert(`Loaded terms for "${listing.title}" into the Automated Settlement Engine.`, "success");
+  showView("seeker");
+  showSeekerSubView("negotiate");
+  showAlert(`Loaded terms for "${listing.title}" into Automated Settlement Engine.`, "success");
 }
 
-// ====================================================================
-// TAB 3 — NEGOTIATE & SETTLE (AUTOMATED SETTLEMENT ENGINE)
-// ====================================================================
+// Negotiate Form Submission (Protected: Token required)
 const negotiateForm = document.getElementById("negotiate-form");
 const btnSubmitNegotiate = document.getElementById("btn-submit-negotiate");
 const negoLoadingState = document.getElementById("nego-loading-state");
@@ -706,6 +1007,14 @@ negotiateForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   hideAlert();
 
+  if (!currentToken) {
+    openAuthModal({
+      lockedRole: "seeker",
+      contextMessage: "Please log in or register to continue with this rental request."
+    });
+    return;
+  }
+
   const provider_min = parseFloat(document.getElementById("nego-provider-min").value);
   const provider_ask = parseFloat(document.getElementById("nego-provider-ask").value);
   const seeker_offer = parseFloat(document.getElementById("nego-seeker-offer").value);
@@ -717,7 +1026,7 @@ negotiateForm.addEventListener("submit", async (e) => {
     return;
   }
 
-  setButtonLoading(btnSubmitNegotiate, true, "Calculating Fair Clearing Price...");
+  setButtonLoading(btnSubmitNegotiate, true, "Calculating Fair Settlement Price...");
   negoLoadingState.classList.remove("hidden");
   negoInitialState.classList.add("hidden");
   negoSettledBox.classList.add("hidden");
@@ -756,7 +1065,6 @@ negotiateForm.addEventListener("submit", async (e) => {
   }
 });
 
-// HTML escaping helper
 function escapeHtml(text) {
   if (!text) return "";
   return String(text)
@@ -769,18 +1077,7 @@ function escapeHtml(text) {
 
 // Initial Boot Sequence
 window.addEventListener("DOMContentLoaded", async () => {
-  // Set default Mumbai hub
   updateListingLocation("Bandra Kurla Complex (BKC), Mumbai", 19.0680, 72.8680);
   updateSeekerLocation("Bandra Kurla Complex (BKC), Mumbai", 19.0680, 72.8680);
-  
-  // Check hash on load
-  if (window.location.hash) {
-    const paneId = window.location.hash.replace("#", "");
-    if (document.getElementById(paneId)) {
-      switchTab(paneId);
-    }
-  }
-
-  await checkBackendHealth();
-  await loadListings();
+  await restoreSession();
 });
