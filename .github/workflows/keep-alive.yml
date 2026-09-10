@@ -1,0 +1,26 @@
+name: Render Backend 24/7 Keep-Alive
+
+on:
+  schedule:
+    # Runs every 12 minutes so Render's 15-minute inactivity timer never triggers
+    - cron: '*/12 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  keep-alive:
+    name: Ping Render Health Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send HTTP Ping to Render
+        run: |
+          # Priority: GitHub Secret RENDER_BACKEND_URL or default project service URL
+          URL="${{ secrets.RENDER_BACKEND_URL }}"
+          if [ -z "$URL" ]; then
+            URL="https://aetherpact-backend.onrender.com"
+          fi
+          # Strip trailing slash if present
+          URL="${URL%/}"
+          
+          echo "Pinging ${URL}/health to prevent 15-min spin-down..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 60 --max-time 90 "${URL}/health" || echo "failed")
+          echo "Render responded with HTTP Status: $STATUS"
