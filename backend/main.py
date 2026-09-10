@@ -136,6 +136,7 @@ class LoginRequest(BaseModel):
     password: str = Field(..., min_length=1)
 
 @app.post("/register")
+@app.post("/api/register")
 def register(req: RegisterRequest):
     """Registers a new user and returns a session token."""
     email_clean = req.email.strip().lower()
@@ -168,6 +169,7 @@ def register(req: RegisterRequest):
     }
 
 @app.post("/login")
+@app.post("/api/login")
 def login(req: LoginRequest):
     """Authenticates a user by email and password, issuing a new session token."""
     email_clean = req.email.strip().lower()
@@ -185,6 +187,7 @@ def login(req: LoginRequest):
     }
 
 @app.get("/me")
+@app.get("/api/me")
 def get_me(request: Request):
     """Returns profile for currently authenticated user."""
     user = get_current_user(request)
@@ -315,14 +318,9 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
     return R * c
 
-# 7. GET /health (Public)
-@app.get("/health")
-def get_health():
-    """Uptime health check endpoint."""
-    return {"status": "ok"}
-
 # 4. GET /listings (Public)
 @app.get("/listings")
+@app.get("/api/listings")
 def get_listings():
     """Returns the full list of current listings with Google Maps URLs (Public)."""
     for item in listings:
@@ -332,6 +330,7 @@ def get_listings():
 
 # 3. POST /listings (Protected: Provider token required)
 @app.post("/listings")
+@app.post("/api/listings")
 def create_listing(listing_in: ListingCreate, request: Request):
     """
     Creates a new listing.
@@ -445,6 +444,7 @@ def generate_negotiation_insight(provider_ask: float, seeker_offer: float, clear
 
 # 5. POST /match (Public)
 @app.post("/match")
+@app.post("/api/match")
 def match_listings(req: MatchRequest):
     """
     Computes live TF-IDF semantic cosine similarity, price fit, and Haversine distance (Public).
@@ -529,6 +529,7 @@ def match_listings(req: MatchRequest):
 
 # 6. POST /negotiate (Protected: Any authenticated user)
 @app.post("/negotiate")
+@app.post("/api/negotiate")
 def negotiate(req: NegotiateRequest, request: Request):
     """
     Deterministic Zone-of-Possible-Agreement (ZOPA) clearing engine.

@@ -68,7 +68,12 @@ function getApiRoot() {
     return API_BASE.trim().replace(/\/+$/, "");
   }
 
-  return "http://127.0.0.1:8000";
+  if (window.__AETHER_ACTIVE_PORT) {
+    return `http://127.0.0.1:${window.__AETHER_ACTIVE_PORT}`;
+  }
+
+  // Default to port 8001 (active port preventing collision with other apps like GuardPay on 8000)
+  return "http://127.0.0.1:8001";
 }
 
 // Global helper to set Render backend URL at runtime from console or UI
@@ -90,10 +95,11 @@ window.setBackendUrl = function(url) {
 };
 
 // Global helper to reset backend URL to localhost
-window.resetBackendUrl = function() {
+window.resetBackendUrl = function(port = 8001) {
   localStorage.removeItem("aether_api_url");
-  console.log("[API] Backend URL reset to local default (http://127.0.0.1:8000)");
-  alert("Backend URL reset to local default:\nhttp://127.0.0.1:8000\n\nReloading page...");
+  window.__AETHER_ACTIVE_PORT = port;
+  console.log(`[API] Backend URL reset to local AetherPact server (http://127.0.0.1:${port})`);
+  alert(`Backend URL reset to local AetherPact server:\nhttp://127.0.0.1:${port}\n\nReloading page...`);
   window.location.reload();
 };
 
@@ -570,6 +576,27 @@ formRegister.addEventListener("submit", async (e) => {
 
 function showModalError(msg) {
   modalErrorText.innerHTML = msg;
+  const currentRoot = getApiRoot();
+
+  if (msg.includes("Not Found") || msg.includes("404")) {
+    modalErrorText.innerHTML = `
+      <div><strong>Backend Endpoint Not Found (404)</strong></div>
+      <div style="font-size: 0.8rem; margin-top: 4px; color: #FCA5A5;">
+        The active endpoint at <code>${currentRoot}</code> returned 404. Another application (e.g. GuardPay) is likely running on port 8000.
+      </div>
+      <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-sm btn-primary" onclick="window.setBackendUrl('http://127.0.0.1:8001')" style="padding: 4px 10px; font-size: 0.78rem;">
+          Connect to AetherPact (Port 8001)
+        </button>
+        <button type="button" class="btn btn-sm btn-outline" onclick="window.openServerConfigModal()" style="padding: 4px 10px; font-size: 0.78rem;">
+          Configure Backend URL
+        </button>
+      </div>
+    `;
+    modalErrorBox.classList.remove("hidden");
+    return;
+  }
+
   if (
     msg.includes("URL") ||
     msg.includes("brackets") ||
@@ -581,8 +608,8 @@ function showModalError(msg) {
     const actionWrap = document.createElement("div");
     actionWrap.style.cssText = "margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;";
     actionWrap.innerHTML = `
-      <button type="button" class="btn btn-sm btn-outline" onclick="window.resetBackendUrl()" style="padding: 3px 9px; font-size: 0.78rem;">
-        Reset to Localhost (127.0.0.1:8000)
+      <button type="button" class="btn btn-sm btn-outline" onclick="window.resetBackendUrl(8001)" style="padding: 3px 9px; font-size: 0.78rem;">
+        Reset to Localhost (127.0.0.1:8001)
       </button>
       <button type="button" class="btn btn-sm btn-outline" onclick="window.openServerConfigModal()" style="padding: 3px 9px; font-size: 0.78rem;">
         Configure Backend URL
@@ -1791,42 +1818,68 @@ function updateServerStatusPill(statusClass, label) {
 }
 
 async function testBackendPing(showLatency = false) {
-  const root = getApiRoot();
+  let root = getApiRoot();
   if (serverCurrentUrl) serverCurrentUrl.textContent = root;
   if (serverPingDot) serverPingDot.className = "server-status-dot waking";
   if (serverPingText) serverPingText.textContent = "Pinging...";
   if (pingLatencyText) pingLatencyText.textContent = "";
 
-  const start = performance.now();
-  try {
+  const checkEndpoint = async (target) => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
-    const res = await fetch(`${root}/health`, { signal: controller.signal }).catch(async () => {
-      // Fallback in case /health isn't caught
-      return await fetch(`${root}/`, { signal: controller.signal });
-    });
-    clearTimeout(timeoutId);
-
-    const elapsed = Math.round(performance.now() - start);
-
-    if (res && res.ok) {
-      if (serverPingDot) serverPingDot.className = "server-status-dot online";
-      if (serverPingText) serverPingText.textContent = `Online (${elapsed}ms)`;
-      if (pingLatencyText && showLatency) pingLatencyText.textContent = `Connected! Latency: ${elapsed}ms. Service is healthy.`;
-      const isLocal = root.includes("127.0.0.1") || root.includes("localhost");
-      updateServerStatusPill("online", isLocal ? "API: Local" : "API: Render");
-    } else {
-      throw new Error(`Status ${res ? res.status : "Unknown"}`);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    try {
+      const res = await fetch(`${target}/health`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (!res.ok) return null;
+      const data = await res.json().catch(() => null);
+      if (data && (data.service === "AetherPact API" || data.status === "ok")) {
+        return { ok: true, data };
+      }
+      return null;
+    } catch (_) {
+      clearTimeout(timeoutId);
+      return null;
     }
-  } catch (err) {
-    const elapsed = Math.round(performance.now() - start);
+  };
+
+  const start = performance.now();
+  let probe = await checkEndpoint(root);
+
+  // If local port 8000 failed or is occupied by another app, check port 8001 (or vice-versa)
+  if (!probe && (root.includes("127.0.0.1") || root.includes("localhost"))) {
+    const is8000 = root.includes(":8000");
+    const altPort = is8000 ? "8001" : "8000";
+    const altRoot = `http://127.0.0.1:${altPort}`;
+    const altProbe = await checkEndpoint(altRoot);
+    if (altProbe) {
+      window.__AETHER_ACTIVE_PORT = altPort;
+      root = altRoot;
+      probe = altProbe;
+      if (serverCurrentUrl) serverCurrentUrl.textContent = root;
+      console.log(`[API] Automatically connected to active AetherPact server on port ${altPort}`);
+    }
+  }
+
+  const elapsed = Math.round(performance.now() - start);
+
+  if (probe && probe.ok) {
+    if (serverPingDot) serverPingDot.className = "server-status-dot online";
+    if (serverPingText) serverPingText.textContent = `Online (${elapsed}ms)`;
+    if (pingLatencyText && showLatency) {
+      pingLatencyText.textContent = `Connected! Latency: ${elapsed}ms. AetherPact API healthy on ${root}.`;
+    }
+    const isLocal = root.includes("127.0.0.1") || root.includes("localhost");
+    const portMatch = root.match(/:(\d+)/);
+    const portLabel = portMatch ? ` (${portMatch[1]})` : "";
+    updateServerStatusPill("online", isLocal ? `API: Local${portLabel}` : "API: Render");
+  } else {
     if (serverPingDot) serverPingDot.className = "server-status-dot waking";
     if (serverPingText) serverPingText.textContent = root.includes("onrender.com") ? "Sleeping / Waking..." : "Offline";
     if (pingLatencyText && showLatency) {
       if (root.includes("onrender.com")) {
         pingLatencyText.textContent = "Render free tier is spinning up (~45-60s cold start). Click Ping again in 20 seconds.";
       } else {
-        pingLatencyText.textContent = `Could not reach ${root}. Make sure local uvicorn is running on port 8000.`;
+        pingLatencyText.textContent = `Could not reach AetherPact at ${root}. Another app may be occupying port 8000.`;
       }
     }
     updateServerStatusPill("waking", root.includes("onrender.com") ? "Render Waking" : "API: Offline");
