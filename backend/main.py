@@ -52,6 +52,19 @@ def root():
     }
 
 
+@app.get("/health")
+def health_check():
+    """Lightweight keep-alive health check endpoint for Render and UptimeRobot."""
+    import time
+    return {
+        "status": "ok",
+        "service": "AetherPact API",
+        "timestamp": int(time.time()),
+        "uptime": "online"
+    }
+
+
+
 # ====================================================================
 # IN-MEMORY DATA STORES & SECURITY DISCLOSURE
 # ====================================================================

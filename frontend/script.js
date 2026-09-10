@@ -1,37 +1,70 @@
 const API_BASE = "PASTE_YOUR_RENDER_BACKEND_URL_HERE";
 
 /**
+ * Validates backend API URLs to prevent fetch crashes caused by placeholder
+ * angle brackets (e.g. <your-render-app-name>) or unparseable protocol strings.
+ */
+function isValidBackendUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (
+    trimmed.includes("<") ||
+    trimmed.includes(">") ||
+    trimmed.includes("PASTE_YOUR_RENDER_BACKEND_URL_HERE") ||
+    trimmed.includes("your-render-app-name")
+  ) {
+    return false;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch (_) {
+    return false;
+  }
+}
+
+/**
  * Resolves active backend API root dynamically.
  * Priority:
- * 1. window.AETHER_API_URL override
- * 2. URL parameter: ?api=https://... (automatically stored in localStorage)
- * 3. Persistent localStorage: 'aether_api_url'
- * 4. API_BASE constant (if configured)
+ * 1. window.AETHER_API_URL override (if valid)
+ * 2. URL parameter: ?api=https://... (if valid, stored in localStorage)
+ * 3. Persistent localStorage: 'aether_api_url' (auto-purged if corrupt/placeholder)
+ * 4. API_BASE constant (if configured and valid)
  * 5. Fallback: http://127.0.0.1:8000 for local development
  */
 function getApiRoot() {
-  if (window.AETHER_API_URL && window.AETHER_API_URL.trim() !== "") {
+  if (window.AETHER_API_URL && isValidBackendUrl(window.AETHER_API_URL)) {
     return window.AETHER_API_URL.trim().replace(/\/+$/, "");
   }
 
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const queryApi = urlParams.get("api");
-    if (queryApi && queryApi.trim() !== "") {
-      const clean = queryApi.trim().replace(/\/+$/, "");
-      localStorage.setItem("aether_api_url", clean);
-      return clean;
+    if (queryApi) {
+      if (isValidBackendUrl(queryApi)) {
+        const clean = queryApi.trim().replace(/\/+$/, "");
+        localStorage.setItem("aether_api_url", clean);
+        return clean;
+      } else {
+        console.warn("[API] Ignored invalid URL parameter ?api=", queryApi);
+      }
     }
   } catch (_) {}
 
   try {
     const stored = localStorage.getItem("aether_api_url");
-    if (stored && stored.trim() !== "") {
-      return stored.trim().replace(/\/+$/, "");
+    if (stored) {
+      if (isValidBackendUrl(stored)) {
+        return stored.trim().replace(/\/+$/, "");
+      } else {
+        // Automatically purge corrupt or placeholder URLs (<your-render-app-name>)
+        console.warn("[API] Automatically purged invalid stored backend URL:", stored);
+        localStorage.removeItem("aether_api_url");
+      }
     }
   } catch (_) {}
 
-  if (API_BASE && API_BASE !== "PASTE_YOUR_RENDER_BACKEND_URL_HERE" && API_BASE.trim() !== "") {
+  if (isValidBackendUrl(API_BASE)) {
     return API_BASE.trim().replace(/\/+$/, "");
   }
 
@@ -41,15 +74,29 @@ function getApiRoot() {
 // Global helper to set Render backend URL at runtime from console or UI
 window.setBackendUrl = function(url) {
   if (!url || typeof url !== "string") {
-    console.error("Please provide a valid backend URL, e.g. setBackendUrl('https://your-app.onrender.com')");
+    alert("Please provide a valid backend URL, e.g. setBackendUrl('https://your-service.onrender.com')");
     return;
   }
-  const clean = url.trim().replace(/\/+$/, "");
+  // Sanitize: strip any accidental angle brackets and trailing slashes
+  const clean = url.trim().replace(/[<>]/g, "").replace(/\/+$/, "");
+  if (!isValidBackendUrl(clean)) {
+    alert("Invalid URL format! Make sure it starts with https:// or http:// and does not contain brackets.\nExample: https://aetherpact-backend.onrender.com");
+    return;
+  }
   localStorage.setItem("aether_api_url", clean);
   console.log(`[API] Backend URL updated to: ${clean}`);
-  alert(`Backend URL updated to: ${clean}\nReloading page to connect...`);
+  alert(`Backend URL updated to:\n${clean}\n\nReloading page to connect...`);
   window.location.reload();
 };
+
+// Global helper to reset backend URL to localhost
+window.resetBackendUrl = function() {
+  localStorage.removeItem("aether_api_url");
+  console.log("[API] Backend URL reset to local default (http://127.0.0.1:8000)");
+  alert("Backend URL reset to local default:\nhttp://127.0.0.1:8000\n\nReloading page...");
+  window.location.reload();
+};
+
 
 
 // Global Reusable AI Sparkle Icon SVG
@@ -334,8 +381,17 @@ async function apiFetch(endpoint, options = {}) {
     return data;
   } catch (err) {
     console.error(`API Error on ${endpoint}:`, err);
+    if (err.message && err.message.includes("Failed to parse URL")) {
+      throw new Error(`Invalid Backend URL "${root}". Please remove any "<" or ">" brackets from your Render URL.`);
+    }
     if (err.message && (err.message.includes("Failed to fetch") || err.message.includes("NetworkError") || err.message.includes("Load failed"))) {
-      throw new Error("Could not reach the server — check your connection or verify backend is running.");
+      if (root.includes("onrender.com")) {
+        throw new Error(
+          `Could not reach Render backend (${root}). Free Render instances sleep after 15 minutes of inactivity and take ~45-60s to wake up (cold start). Please wait 30 seconds and try again, or click the API Status pill in the header.`
+        );
+      } else {
+        throw new Error(`Could not reach backend at ${root}. Please ensure your local Python backend is running on port 8000.`);
+      }
     }
     throw err;
   }
@@ -513,7 +569,27 @@ formRegister.addEventListener("submit", async (e) => {
 });
 
 function showModalError(msg) {
-  modalErrorText.textContent = msg;
+  modalErrorText.innerHTML = msg;
+  if (
+    msg.includes("URL") ||
+    msg.includes("brackets") ||
+    msg.includes("backend") ||
+    msg.includes("Render") ||
+    msg.includes("reach") ||
+    msg.includes("connection")
+  ) {
+    const actionWrap = document.createElement("div");
+    actionWrap.style.cssText = "margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;";
+    actionWrap.innerHTML = `
+      <button type="button" class="btn btn-sm btn-outline" onclick="window.resetBackendUrl()" style="padding: 3px 9px; font-size: 0.78rem;">
+        Reset to Localhost (127.0.0.1:8000)
+      </button>
+      <button type="button" class="btn btn-sm btn-outline" onclick="window.openServerConfigModal()" style="padding: 3px 9px; font-size: 0.78rem;">
+        Configure Backend URL
+      </button>
+    `;
+    modalErrorText.appendChild(actionWrap);
+  }
   modalErrorBox.classList.remove("hidden");
 }
 
@@ -1685,4 +1761,121 @@ initScrollAnimations();
 init3DCardTilt();
 initFaqAccordion();
 initFeaturedAssetTriggers();
+
+// ====================================================================
+// BACKEND SERVER CONNECTION & RENDER STATUS CONTROLLER
+// ====================================================================
+const btnServerStatus = document.getElementById("btn-server-status");
+const serverStatusDot = document.getElementById("server-status-dot");
+const serverStatusText = document.getElementById("server-status-text");
+
+const modalServerConfig = document.getElementById("modal-server-config");
+const btnCloseServerModal = document.getElementById("btn-close-server-modal");
+const serverCurrentUrl = document.getElementById("server-current-url");
+const serverPingBadge = document.getElementById("server-ping-badge");
+const serverPingDot = document.getElementById("server-ping-dot");
+const serverPingText = document.getElementById("server-ping-text");
+const pingLatencyText = document.getElementById("ping-latency-text");
+const btnTestPing = document.getElementById("btn-test-ping");
+const inputBackendUrl = document.getElementById("input-backend-url");
+const btnSaveBackendUrl = document.getElementById("btn-save-backend-url");
+const btnResetLocalhost = document.getElementById("btn-reset-localhost");
+
+function updateServerStatusPill(statusClass, label) {
+  if (serverStatusDot) {
+    serverStatusDot.className = "server-status-dot " + statusClass;
+  }
+  if (serverStatusText) {
+    serverStatusText.textContent = label;
+  }
+}
+
+async function testBackendPing(showLatency = false) {
+  const root = getApiRoot();
+  if (serverCurrentUrl) serverCurrentUrl.textContent = root;
+  if (serverPingDot) serverPingDot.className = "server-status-dot waking";
+  if (serverPingText) serverPingText.textContent = "Pinging...";
+  if (pingLatencyText) pingLatencyText.textContent = "";
+
+  const start = performance.now();
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(`${root}/health`, { signal: controller.signal }).catch(async () => {
+      // Fallback in case /health isn't caught
+      return await fetch(`${root}/`, { signal: controller.signal });
+    });
+    clearTimeout(timeoutId);
+
+    const elapsed = Math.round(performance.now() - start);
+
+    if (res && res.ok) {
+      if (serverPingDot) serverPingDot.className = "server-status-dot online";
+      if (serverPingText) serverPingText.textContent = `Online (${elapsed}ms)`;
+      if (pingLatencyText && showLatency) pingLatencyText.textContent = `Connected! Latency: ${elapsed}ms. Service is healthy.`;
+      const isLocal = root.includes("127.0.0.1") || root.includes("localhost");
+      updateServerStatusPill("online", isLocal ? "API: Local" : "API: Render");
+    } else {
+      throw new Error(`Status ${res ? res.status : "Unknown"}`);
+    }
+  } catch (err) {
+    const elapsed = Math.round(performance.now() - start);
+    if (serverPingDot) serverPingDot.className = "server-status-dot waking";
+    if (serverPingText) serverPingText.textContent = root.includes("onrender.com") ? "Sleeping / Waking..." : "Offline";
+    if (pingLatencyText && showLatency) {
+      if (root.includes("onrender.com")) {
+        pingLatencyText.textContent = "Render free tier is spinning up (~45-60s cold start). Click Ping again in 20 seconds.";
+      } else {
+        pingLatencyText.textContent = `Could not reach ${root}. Make sure local uvicorn is running on port 8000.`;
+      }
+    }
+    updateServerStatusPill("waking", root.includes("onrender.com") ? "Render Waking" : "API: Offline");
+  }
+}
+
+function openServerConfigModal() {
+  if (!modalServerConfig) return;
+  const root = getApiRoot();
+  if (serverCurrentUrl) serverCurrentUrl.textContent = root;
+  if (inputBackendUrl) {
+    inputBackendUrl.value = root.includes("127.0.0.1") || root.includes("localhost") ? "" : root;
+  }
+  modalServerConfig.classList.remove("hidden");
+  testBackendPing(true);
+}
+
+function closeServerConfigModal() {
+  if (modalServerConfig) modalServerConfig.classList.add("hidden");
+}
+
+window.openServerConfigModal = openServerConfigModal;
+
+if (btnServerStatus) {
+  btnServerStatus.addEventListener("click", openServerConfigModal);
+}
+if (btnCloseServerModal) {
+  btnCloseServerModal.addEventListener("click", closeServerConfigModal);
+}
+if (btnTestPing) {
+  btnTestPing.addEventListener("click", () => testBackendPing(true));
+}
+if (btnSaveBackendUrl) {
+  btnSaveBackendUrl.addEventListener("click", () => {
+    const val = inputBackendUrl ? inputBackendUrl.value.trim() : "";
+    if (!val) {
+      alert("Please enter your live Render backend URL, e.g. https://your-service.onrender.com");
+      return;
+    }
+    window.setBackendUrl(val);
+  });
+}
+if (btnResetLocalhost) {
+  btnResetLocalhost.addEventListener("click", () => {
+    window.resetBackendUrl();
+  });
+}
+
+// Initial silent ping to establish header connection pill state
+testBackendPing(false);
+
 

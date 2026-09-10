@@ -53,6 +53,12 @@
 
       <!-- Navigation Actions (Swapped dynamically based on Auth State) -->
       <div class="nav-auth-actions" id="nav-auth-actions">
+        <!-- Server Connection Pill -->
+        <button type="button" class="btn-server-pill" id="btn-server-status" title="Configure Backend API URL & Live Status">
+          <span class="server-status-dot" id="server-status-dot"></span>
+          <span class="server-status-text" id="server-status-text">API: Checking...</span>
+        </button>
+
         <!-- Logged-out state -->
         <div id="nav-logged-out" class="nav-user-cluster">
           <button type="button" class="btn btn-header-search" id="btn-header-search" title="Find Resources">
@@ -1260,6 +1266,76 @@
       </form>
     </div>
   </div>
+
+  <!-- ====================================================================
+       BACKEND SERVER CONFIGURATION MODAL
+       ==================================================================== -->
+  <div id="modal-server-config" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-server-title">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="modal-server-title">Backend API &amp; Render Settings</h3>
+          <p class="modal-subtitle">Check connection, test ping, switch between Localhost &amp; Render</p>
+        </div>
+        <button type="button" class="modal-close" id="btn-close-server-modal" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="server-config-content">
+        <!-- Current Active URL Card -->
+        <div class="server-status-card">
+          <div class="server-status-row">
+            <div>
+              <span class="server-card-label">Active Backend API Root:</span>
+              <div class="server-current-url" id="server-current-url">http://127.0.0.1:8000</div>
+            </div>
+            <div class="server-ping-badge" id="server-ping-badge">
+              <span class="server-status-dot" id="server-ping-dot"></span>
+              <span id="server-ping-text">Checking...</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-sm btn-primary" id="btn-test-ping">
+              <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+              <span>Ping Backend Now</span>
+            </button>
+            <span id="ping-latency-text" style="font-size: 0.8rem; color: #94A3B8;"></span>
+          </div>
+        </div>
+
+        <!-- Set Custom Backend URL -->
+        <div class="form-group" style="margin-top: 18px;">
+          <label for="input-backend-url"><strong>Connect to Live Render Backend:</strong></label>
+          <div class="input-with-action">
+            <input type="text" id="input-backend-url" class="form-control" placeholder="https://aetherpact-backend.onrender.com" autocomplete="off" spellcheck="false">
+            <button type="button" class="btn btn-primary" id="btn-save-backend-url">Save &amp; Connect</button>
+          </div>
+          <small class="helper-text" style="color: #94A3B8; margin-top: 4px; display: block;">
+            Paste your live Render Web Service URL. Do <strong>not</strong> include angle brackets <code>&lt;&gt;</code>.
+          </small>
+        </div>
+
+        <!-- Quick Switch Options -->
+        <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-sm btn-outline" id="btn-reset-localhost">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg>
+            <span>Reset to Localhost (127.0.0.1:8000)</span>
+          </button>
+        </div>
+
+        <!-- Render Free Tier 15-Min Auto-Sleep Guide -->
+        <div class="render-sleep-info" style="margin-top: 20px;">
+          <div class="render-info-header">
+            <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <strong>Render 15-Minute Auto-Sleep &amp; 24/7 Keep-Alive Guide</strong>
+          </div>
+          <p><strong>• Why does Render sleep?</strong> Render's free tier automatically spins down web services after 15 minutes of inactivity.</p>
+          <p><strong>• How to wake it up?</strong> Any incoming HTTP request wakes it up. Click <em>"Ping Backend Now"</em> above or load the site. Cold starts take ~45&ndash;60 seconds.</p>
+          <p><strong>• How to keep it online 24/7 for FREE?</strong> Set up a free HTTP monitor on <a href="https://uptimerobot.com" target="_blank" rel="noopener" style="color: #818CF8; text-decoration: underline; font-weight: 600;">UptimeRobot.com</a> to ping <code>https://&lt;your-app&gt;.onrender.com/health</code> every <strong>10 minutes</strong>. This prevents Render from ever sleeping!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <footer class="app-footer">
     <div class="footer-container">
