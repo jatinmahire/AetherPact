@@ -3748,4 +3748,63 @@ textarea { resize: vertical; }
   margin: 6px 0 0;
 }
 
+/* ====================================================================
+   REMOTE / VERCEL DEPLOYMENT BANNER
+   ==================================================================== */
+.remote-backend-banner {
+  background: linear-gradient(90deg, rgba(30, 27, 75, 0.96) 0%, rgba(49, 46, 129, 0.96) 100%);
+  border-bottom: 1px solid rgba(129, 140, 248, 0.35);
+  padding: 10px 24px;
+  position: relative;
+  z-index: 90;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.remote-banner-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.remote-banner-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.86rem;
+  color: #E0E7FF;
+}
+
+.remote-banner-pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #F59E0B;
+  box-shadow: 0 0 12px #F59E0B;
+  animation: pulseAmber 1.8s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulseAmber {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(1.3); }
+}
+
+.remote-banner-text strong {
+  color: #FBBF24;
+}
+
+#btn-remote-banner-connect {
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+
 

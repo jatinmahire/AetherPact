@@ -86,6 +86,21 @@
     </div>
   </header>
 
+  <!-- Vercel Deployment Notice Banner (Auto-shown when on Vercel/remote and backend URL is not connected) -->
+  <aside id="banner-remote-backend" class="remote-backend-banner hidden" aria-label="Backend Configuration Notice">
+    <div class="remote-banner-container">
+      <div class="remote-banner-info">
+        <span class="remote-banner-pulse"></span>
+        <span class="remote-banner-text">
+          <strong>Vercel Deployment:</strong> Connect your live Render backend Web Service URL to enable account registration, AI matching, and negotiations.
+        </span>
+      </div>
+      <button type="button" class="btn btn-sm btn-primary" id="btn-remote-banner-connect" onclick="window.openServerConfigModal()">
+        Connect Render Backend
+      </button>
+    </div>
+  </aside>
+
   <!-- ====================================================================
        VIEW 1: LANDING PAGE (Default for Visitors with No Session)
        ==================================================================== -->

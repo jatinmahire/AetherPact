@@ -24,13 +24,23 @@ function isValidBackendUrl(url) {
 }
 
 /**
+ * Checks if the frontend is running on a remote cloud deployment (e.g. Vercel, Netlify, custom domain)
+ * rather than a local developer machine.
+ */
+function isRemoteEnvironment() {
+  const host = window.location.hostname;
+  return host !== "localhost" && host !== "127.0.0.1" && host !== "";
+}
+
+/**
  * Resolves active backend API root dynamically.
  * Priority:
  * 1. window.AETHER_API_URL override (if valid)
  * 2. URL parameter: ?api=https://... (if valid, stored in localStorage)
  * 3. Persistent localStorage: 'aether_api_url' (auto-purged if corrupt/placeholder)
  * 4. API_BASE constant (if configured and valid)
- * 5. Fallback: http://127.0.0.1:8000 for local development
+ * 5. If running on remote domain (Vercel): returns "" if no cloud backend is configured yet
+ * 6. Local development fallback: http://127.0.0.1:8001 (or active port)
  */
 function getApiRoot() {
   if (window.AETHER_API_URL && isValidBackendUrl(window.AETHER_API_URL)) {
@@ -68,6 +78,11 @@ function getApiRoot() {
     return API_BASE.trim().replace(/\/+$/, "");
   }
 
+  // When deployed on Vercel / remote HTTPS, do NOT default to 127.0.0.1 (blocked by browsers as mixed content)
+  if (isRemoteEnvironment()) {
+    return "";
+  }
+
   if (window.__AETHER_ACTIVE_PORT) {
     return `http://127.0.0.1:${window.__AETHER_ACTIVE_PORT}`;
   }
@@ -92,6 +107,25 @@ window.setBackendUrl = function(url) {
   console.log(`[API] Backend URL updated to: ${clean}`);
   alert(`Backend URL updated to:\n${clean}\n\nReloading page to connect...`);
   window.location.reload();
+};
+
+// Global helper to save inline Render backend URL directly from modal without page reload
+window.saveInlineBackendUrl = function() {
+  const input = document.getElementById("modal-inline-render-url");
+  if (!input || !input.value.trim()) {
+    alert("Please enter your live Render backend URL, e.g. https://your-service.onrender.com");
+    return;
+  }
+  const clean = input.value.trim().replace(/[<>]/g, "").replace(/\/+$/, "");
+  if (!isValidBackendUrl(clean)) {
+    alert("Invalid URL format! Make sure it starts with https:// or http:// and does not contain brackets.\nExample: https://aetherpact-backend.onrender.com");
+    return;
+  }
+  localStorage.setItem("aether_api_url", clean);
+  modalErrorBox.classList.add("hidden");
+  checkVercelBannerState();
+  testBackendPing(true);
+  alert(`Backend successfully connected to:\n${clean}\n\nYou can now submit the form to create your account!`);
 };
 
 // Global helper to reset backend URL to localhost
@@ -354,6 +388,14 @@ function setButtonLoading(button, isLoading, loadingText = "Processing...") {
 // Safe API Fetch Wrapper with Automatic Auth Header
 async function apiFetch(endpoint, options = {}) {
   const root = getApiRoot();
+  const remote = isRemoteEnvironment();
+
+  if (!root || (remote && (root.includes("127.0.0.1") || root.includes("localhost")))) {
+    const err = new Error("REMOTE_BACKEND_REQUIRED");
+    err.isRemoteBackendRequired = true;
+    throw err;
+  }
+
   const url = `${root}${endpoint}`;
 
   const headers = {
@@ -387,6 +429,9 @@ async function apiFetch(endpoint, options = {}) {
     return data;
   } catch (err) {
     console.error(`API Error on ${endpoint}:`, err);
+    if (err.isRemoteBackendRequired || err.message === "REMOTE_BACKEND_REQUIRED") {
+      throw err;
+    }
     if (err.message && err.message.includes("Failed to parse URL")) {
       throw new Error(`Invalid Backend URL "${root}". Please remove any "<" or ">" brackets from your Render URL.`);
     }
@@ -395,8 +440,10 @@ async function apiFetch(endpoint, options = {}) {
         throw new Error(
           `Could not reach Render backend (${root}). Free Render instances sleep after 15 minutes of inactivity and take ~45-60s to wake up (cold start). Please wait 30 seconds and try again, or click the API Status pill in the header.`
         );
+      } else if (remote) {
+        throw new Error("REMOTE_BACKEND_REQUIRED");
       } else {
-        throw new Error(`Could not reach backend at ${root}. Please ensure your local Python backend is running on port 8000.`);
+        throw new Error(`Could not reach backend at ${root}. Please ensure your local Python backend is running on port 8001.`);
       }
     }
     throw err;
@@ -575,19 +622,44 @@ formRegister.addEventListener("submit", async (e) => {
 });
 
 function showModalError(msg) {
-  modalErrorText.innerHTML = msg;
+  modalErrorText.innerHTML = "";
   const currentRoot = getApiRoot();
+  const remote = isRemoteEnvironment();
+
+  if (
+    msg === "REMOTE_BACKEND_REQUIRED" ||
+    (remote && (!currentRoot || currentRoot.includes("127.0.0.1") || currentRoot.includes("localhost") || msg.includes("reach backend")))
+  ) {
+    modalErrorText.innerHTML = `
+      <div style="text-align: left;">
+        <div style="font-weight: 700; color: #FCA5A5; display: flex; align-items: center; gap: 7px; font-size: 0.92rem;">
+          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Live Render Backend Required on Vercel</span>
+        </div>
+        <div style="font-size: 0.82rem; color: #E2E8F0; margin-top: 6px; line-height: 1.45;">
+          You are viewing AetherPact on <strong>Vercel (HTTPS)</strong>. Public browsers cannot reach local laptop addresses. Please enter your live <strong>Render Web Service URL</strong> to connect:
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <input type="text" id="modal-inline-render-url" placeholder="https://your-service.onrender.com" class="form-control" style="flex: 1; font-size: 0.82rem; padding: 7px 10px; background: #0F172A; border: 1px solid #334155; color: #F8FAFC; border-radius: 6px;" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn btn-sm btn-primary" onclick="window.saveInlineBackendUrl()" style="white-space: nowrap; font-size: 0.8rem; padding: 7px 14px; font-weight: 600;">Connect &amp; Retry</button>
+        </div>
+        <div style="font-size: 0.74rem; color: #94A3B8; margin-top: 8px;">
+          Once entered, your Render URL is saved permanently for this Vercel site.
+        </div>
+      </div>
+    `;
+    modalErrorBox.classList.remove("hidden");
+    return;
+  }
 
   if (msg.includes("Not Found") || msg.includes("404")) {
     modalErrorText.innerHTML = `
       <div><strong>Backend Endpoint Not Found (404)</strong></div>
       <div style="font-size: 0.8rem; margin-top: 4px; color: #FCA5A5;">
-        The active endpoint at <code>${currentRoot}</code> returned 404. Another application (e.g. GuardPay) is likely running on port 8000.
+        The active endpoint at <code>${currentRoot || "unknown"}</code> returned 404. ${remote ? "Please verify your live Render Web Service is running." : "Another application (e.g. GuardPay) is likely running on port 8000."}
       </div>
       <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
-        <button type="button" class="btn btn-sm btn-primary" onclick="window.setBackendUrl('http://127.0.0.1:8001')" style="padding: 4px 10px; font-size: 0.78rem;">
-          Connect to AetherPact (Port 8001)
-        </button>
+        ${!remote ? `<button type="button" class="btn btn-sm btn-primary" onclick="window.setBackendUrl('http://127.0.0.1:8001')" style="padding: 4px 10px; font-size: 0.78rem;">Connect to AetherPact (Port 8001)</button>` : ""}
         <button type="button" class="btn btn-sm btn-outline" onclick="window.openServerConfigModal()" style="padding: 4px 10px; font-size: 0.78rem;">
           Configure Backend URL
         </button>
@@ -596,6 +668,8 @@ function showModalError(msg) {
     modalErrorBox.classList.remove("hidden");
     return;
   }
+
+  modalErrorText.textContent = msg;
 
   if (
     msg.includes("URL") ||
@@ -608,9 +682,7 @@ function showModalError(msg) {
     const actionWrap = document.createElement("div");
     actionWrap.style.cssText = "margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;";
     actionWrap.innerHTML = `
-      <button type="button" class="btn btn-sm btn-outline" onclick="window.resetBackendUrl(8001)" style="padding: 3px 9px; font-size: 0.78rem;">
-        Reset to Localhost (127.0.0.1:8001)
-      </button>
+      ${!remote ? `<button type="button" class="btn btn-sm btn-outline" onclick="window.resetBackendUrl(8001)" style="padding: 3px 9px; font-size: 0.78rem;">Reset to Localhost (127.0.0.1:8001)</button>` : ""}
       <button type="button" class="btn btn-sm btn-outline" onclick="window.openServerConfigModal()" style="padding: 3px 9px; font-size: 0.78rem;">
         Configure Backend URL
       </button>
@@ -1808,6 +1880,18 @@ const inputBackendUrl = document.getElementById("input-backend-url");
 const btnSaveBackendUrl = document.getElementById("btn-save-backend-url");
 const btnResetLocalhost = document.getElementById("btn-reset-localhost");
 
+function checkVercelBannerState() {
+  const banner = document.getElementById("banner-remote-backend");
+  if (!banner) return;
+  const root = getApiRoot();
+  const remote = isRemoteEnvironment();
+  if (remote && (!root || root.includes("127.0.0.1") || root.includes("localhost"))) {
+    banner.classList.remove("hidden");
+  } else {
+    banner.classList.add("hidden");
+  }
+}
+
 function updateServerStatusPill(statusClass, label) {
   if (serverStatusDot) {
     serverStatusDot.className = "server-status-dot " + statusClass;
@@ -1819,7 +1903,24 @@ function updateServerStatusPill(statusClass, label) {
 
 async function testBackendPing(showLatency = false) {
   let root = getApiRoot();
-  if (serverCurrentUrl) serverCurrentUrl.textContent = root;
+  const remote = isRemoteEnvironment();
+
+  if (serverCurrentUrl) {
+    serverCurrentUrl.textContent = root || (remote ? "Not Connected (Render Cloud URL Required)" : "http://127.0.0.1:8001");
+  }
+
+  // Handle remote Vercel environment where no live Render backend is configured yet
+  if (remote && (!root || root.includes("127.0.0.1") || root.includes("localhost"))) {
+    if (serverPingDot) serverPingDot.className = "server-status-dot waking";
+    if (serverPingText) serverPingText.textContent = "Backend Needed";
+    if (pingLatencyText && showLatency) {
+      pingLatencyText.textContent = "You are viewing AetherPact on Vercel. Please enter your live Render backend URL below.";
+    }
+    updateServerStatusPill("waking", "Connect Render API");
+    checkVercelBannerState();
+    return;
+  }
+
   if (serverPingDot) serverPingDot.className = "server-status-dot waking";
   if (serverPingText) serverPingText.textContent = "Pinging...";
   if (pingLatencyText) pingLatencyText.textContent = "";
@@ -1846,7 +1947,7 @@ async function testBackendPing(showLatency = false) {
   let probe = await checkEndpoint(root);
 
   // If local port 8000 failed or is occupied by another app, check port 8001 (or vice-versa)
-  if (!probe && (root.includes("127.0.0.1") || root.includes("localhost"))) {
+  if (!probe && !remote && (root.includes("127.0.0.1") || root.includes("localhost"))) {
     const is8000 = root.includes(":8000");
     const altPort = is8000 ? "8001" : "8000";
     const altRoot = `http://127.0.0.1:${altPort}`;
@@ -1872,26 +1973,40 @@ async function testBackendPing(showLatency = false) {
     const portMatch = root.match(/:(\d+)/);
     const portLabel = portMatch ? ` (${portMatch[1]})` : "";
     updateServerStatusPill("online", isLocal ? `API: Local${portLabel}` : "API: Render");
+    checkVercelBannerState();
   } else {
     if (serverPingDot) serverPingDot.className = "server-status-dot waking";
     if (serverPingText) serverPingText.textContent = root.includes("onrender.com") ? "Sleeping / Waking..." : "Offline";
     if (pingLatencyText && showLatency) {
       if (root.includes("onrender.com")) {
         pingLatencyText.textContent = "Render free tier is spinning up (~45-60s cold start). Click Ping again in 20 seconds.";
+      } else if (remote) {
+        pingLatencyText.textContent = "Could not reach Render backend. Please verify your web service status on render.com.";
       } else {
         pingLatencyText.textContent = `Could not reach AetherPact at ${root}. Another app may be occupying port 8000.`;
       }
     }
-    updateServerStatusPill("waking", root.includes("onrender.com") ? "Render Waking" : "API: Offline");
+    updateServerStatusPill("waking", root.includes("onrender.com") ? "Render Waking" : (remote ? "Connect Render API" : "API: Offline"));
+    checkVercelBannerState();
   }
 }
 
 function openServerConfigModal() {
   if (!modalServerConfig) return;
   const root = getApiRoot();
-  if (serverCurrentUrl) serverCurrentUrl.textContent = root;
+  const remote = isRemoteEnvironment();
+  if (serverCurrentUrl) {
+    serverCurrentUrl.textContent = root || (remote ? "Not Connected (Render Cloud URL Required)" : "http://127.0.0.1:8001");
+  }
   if (inputBackendUrl) {
     inputBackendUrl.value = root.includes("127.0.0.1") || root.includes("localhost") ? "" : root;
+  }
+  if (btnResetLocalhost) {
+    if (remote) {
+      btnResetLocalhost.style.display = "none";
+    } else {
+      btnResetLocalhost.style.display = "inline-flex";
+    }
   }
   modalServerConfig.classList.remove("hidden");
   testBackendPing(true);
@@ -1928,7 +2043,8 @@ if (btnResetLocalhost) {
   });
 }
 
-// Initial silent ping to establish header connection pill state
+// Initial silent ping and Vercel banner check
+checkVercelBannerState();
 testBackendPing(false);
 
 
