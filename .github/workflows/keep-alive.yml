@@ -16,7 +16,7 @@ jobs:
           # Priority: GitHub Secret RENDER_BACKEND_URL or default project service URL
           URL="${{ secrets.RENDER_BACKEND_URL }}"
           if [ -z "$URL" ]; then
-            URL="https://aetherpact-backend.onrender.com"
+            URL="https://aetherpact.onrender.com"
           fi
           # Strip trailing slash if present
           URL="${URL%/}"

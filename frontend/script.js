@@ -1,4 +1,4 @@
-const API_BASE = "PASTE_YOUR_RENDER_BACKEND_URL_HERE";
+const API_BASE = "https://aetherpact.onrender.com";
 
 /**
  * Validates backend API URLs to prevent fetch crashes caused by placeholder
@@ -74,20 +74,20 @@ function getApiRoot() {
     }
   } catch (_) {}
 
-  if (isValidBackendUrl(API_BASE)) {
-    return API_BASE.trim().replace(/\/+$/, "");
-  }
-
-  // When deployed on Vercel / remote HTTPS, do NOT default to 127.0.0.1 (blocked by browsers as mixed content)
+  // On remote environments (e.g. Vercel / Netlify / custom domains):
   if (isRemoteEnvironment()) {
+    if (isValidBackendUrl(API_BASE)) {
+      return API_BASE.trim().replace(/\/+$/, "");
+    }
     return "";
   }
 
+  // On local developer machine (localhost / 127.0.0.1):
   if (window.__AETHER_ACTIVE_PORT) {
     return `http://127.0.0.1:${window.__AETHER_ACTIVE_PORT}`;
   }
 
-  // Default to port 8001 (active port preventing collision with other apps like GuardPay on 8000)
+  // Default to port 8001 for local development
   return "http://127.0.0.1:8001";
 }
 
